@@ -15,10 +15,11 @@
 
 //Credenciales de WiFi
 
-#define WIFI_SSID "SSID"
-#define WIFI_PASSWORD "PASSOWRD"
-#define SERVER_IP     "192.168.0.1" // IP del servidor
+#define WIFI_SSID "iotcositas"
+#define WIFI_PASSWORD "iotcositas"
+#define SERVER_IP     "192.168.4.1" // IP del servidor
 #define SERVER_PORT   1234
+#define SERVER_UDP_PORT 1235
 
 // Variables de WiFi
 #define WIFI_CONNECTED_BIT BIT0
@@ -32,6 +33,7 @@ void event_handler(void* arg, esp_event_base_t event_base,
                           int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
+        ESP_LOGI(TAG, "Intentando conectar a la red...");
     } else if (event_base == WIFI_EVENT &&
                event_id == WIFI_EVENT_STA_DISCONNECTED) {
         if (s_retry_num < 10) {
@@ -115,6 +117,29 @@ void nvs_init() {
 }
 
 
+void socket_udp(){
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERVER_UDP_PORT);
+    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
+
+    // Crear un socket
+    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock < 0) {
+        ESP_LOGE(TAG, "Error al crear el socket");
+        return;
+    }
+
+    // Enviar mensaje "Hola Mundo"
+    sendto(sock, "hola mundo", strlen("hola mundo"), 0,
+           (struct sockaddr *)&server_addr, sizeof(server_addr));
+
+
+    ESP_LOGI(TAG, "Se enviaron los datos");
+
+
+}
+
 void socket_tcp(){
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
@@ -158,5 +183,6 @@ void app_main(void){
     nvs_init();
     wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
     ESP_LOGI(TAG,"Conectado a WiFi!\n");
-    socket_tcp();
+    // socket_tcp();
+    socket_udp();
 }
