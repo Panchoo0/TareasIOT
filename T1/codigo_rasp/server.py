@@ -14,7 +14,7 @@ socketTCP.bind((HOST, PORT))
 socketUDP.bind((HOST, PORT_UDP))
 
 socketTCP.listen(3)
-socketUDP.listen(3)
+
 
 
 # with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
