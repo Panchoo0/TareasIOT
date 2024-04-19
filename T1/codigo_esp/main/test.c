@@ -130,12 +130,13 @@ void socket_udp(){
         return;
     }
 
-    // Enviar mensaje "Hola Mundo"
+    // Enviar mensaje continuamente hasta que se cambie el protocolo
     sendto(sock, "hola mundo", strlen("hola mundo"), 0,
            (struct sockaddr *)&server_addr, sizeof(server_addr));
 
 
     ESP_LOGI(TAG, "Se enviaron los datos");
+    close(sock);
 
 
 }
@@ -161,9 +162,20 @@ void socket_tcp(){
     }
 
     // Enviar mensaje "Hola Mundo"
-    send(sock, "hola mundo", strlen("hola mundo"), 0);
+    // send(sock, "hola mundo", strlen("hola mundo"), 0);
 
     // Recibir respuesta
+
+    // char rx_buffer[128];
+    // int rx_len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
+    // if (rx_len < 0) {
+    //     ESP_LOGE(TAG, "Error al recibir datos");
+    //     return;
+    // }
+    // ESP_LOGI(TAG, "Datos recibidos: %s", rx_buffer);
+    
+    // // Cerrar el socket
+    // close(sock);
 
     char rx_buffer[128];
     int rx_len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
@@ -172,9 +184,27 @@ void socket_tcp(){
         return;
     }
     ESP_LOGI(TAG, "Datos recibidos: %s", rx_buffer);
-    
-    // Cerrar el socket
+
+    char *tokens = strtok(rx_buffer, ":");
+
+    char *ID_protocol = tokens;
+    tokens = strtok(NULL, ":");
+    char *Transport_Layer = tokens;
+
+    if (strcmp(Transport_Layer, "UDP") == 0){
+        close(sock);
+        return socket_udp();
+    }
+
+    // Enviar el paquete y luego entrar en modo deep sleep
+    send(sock, "hola mundo", strlen("hola mundo"), 0);
     close(sock);
+
+    esp_deep_sleep_enable_timer_wakeup(60000000); // 10000000 us = 10 s
+
+    esp_deep_sleep_start();
+
+
 }
 
 

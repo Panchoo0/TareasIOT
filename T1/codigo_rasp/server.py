@@ -4,8 +4,6 @@ HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
 PORT_UDP = 1235
 
-conn_type = "UDP"    
-
 # Crea un socket para IPv4 y conexión TCP
 socketTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 socketUDP = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -35,13 +33,17 @@ socketTCP.listen(3)
 
 
 def main():
-    if conn_type == "TCP":
-        conn, addr = socketTCP.accept()  # Espera una conexión
+    conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
+    ID_protocol, Transport_Layer = (0, "TCP") # Aquí se debe hacer la consulta a la base de datos
+    coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
+    conn.sendall(coded_message.encode('utf-8'))
+    
+    if Transport_Layer == "TCP":
         data = conn.recv(1024)  # Recibe hasta 1024 bytes del cliente
         print("Recibido: ", data.decode('utf-8'))
         conn.close()
 
-    elif conn_type == "UDP":
+    elif Transport_Layer == "UDP":
         data, addr = socketUDP.recvfrom(1024)
         print("Recibido: ", data.decode('utf-8'))
 
