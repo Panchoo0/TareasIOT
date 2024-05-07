@@ -38,7 +38,14 @@ def parse_headers(data):
     
     id = struct.unpack('<h', data[:2])[0]
     print("id", id)
-    mac = struct.unpack('<6B', data[2:8])[0]
+    mac_1 = hex(struct.unpack('<B', data[2:3])[0])
+    mac_2 = hex(struct.unpack('<B', data[3:4])[0])
+    mac_3 = hex(struct.unpack('<B', data[4:5])[0])
+    mac_4 = hex(struct.unpack('<B', data[5:6])[0])
+    mac_5 = hex(struct.unpack('<B', data[6:7])[0])
+    mac_6 = hex(struct.unpack('<B', data[7:8])[0])
+
+    mac = f"{mac_1}:{mac_2}:{mac_3}:{mac_4}:{mac_5}:{mac_6}"
     print("mac", mac)
     
     Transport_layer = struct.unpack('<c', data[8:9])[0]
@@ -82,9 +89,9 @@ def add_data(data):
 
 def change_protocol(ID_protocol):
     if ID_protocol == '0':
-        new_protocol = Configuracion()
+        # new_protocol = db.
         new_protocol.ID_protocol = "0"
-        return 
+        
     elif ID_protocol == '1':
         return
     elif ID_protocol == '2':
