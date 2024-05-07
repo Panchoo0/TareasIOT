@@ -35,12 +35,12 @@ class Datos(BaseModel):
     press = IntegerField()
     hum = IntegerField()
     co = FloatField()
-    acc_x = ArrayField(FloatField)
+    """ acc_x = ArrayField(FloatField)
     acc_y = ArrayField(FloatField)
     acc_z = ArrayField(FloatField)
     rgyr_x = ArrayField(FloatField)
     rgyr_y = ArrayField(FloatField)
-    rgyr_z = ArrayField(FloatField)
+    rgyr_z = ArrayField(FloatField) """
     # Extra
     ID_device = CharField()
     MAC = CharField()
