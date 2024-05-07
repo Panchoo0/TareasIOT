@@ -1,5 +1,6 @@
 import socket
 import struct
+from modelos import *
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
 PORT_UDP = 1235
@@ -53,8 +54,9 @@ def parse_headers(data):
 
 def parse_protocol_0(data):
     headers = parse_headers(data)
-
+    print("parsed",headers)
     batt_lvl = struct.unpack('<B', data[12:13])[0]
+    print("batt_lvl", batt_lvl)
 
     return {
         **headers,
@@ -78,13 +80,9 @@ def add_data(data):
 
 def change_protocol(data, ID_protocol):
     headers_data = parse_headers(data)
-    batt_lvl = struct.unpack('<B', data[12:13])[0]
     if ID_protocol == '0':
         headers_data['ID_Protocol'] = 0
-        return {
-            **headers_data,
-            'batt_lvl': batt_lvl
-        }
+        return 
     elif ID_protocol == '1':
         headers_data['ID_Protocol'] = 1
         return
