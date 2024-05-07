@@ -62,12 +62,15 @@ class Configuracion(BaseModel):
     Transport_Layer = CharField()
 
     def set_protocol(self, new_ID):
+        # config = Configuracion.
         self.ID_protocol = new_ID
+        self.save()
     
     def set_Transport_layer(self, new_Transport_layer):
         self.Transport_layer = new_Transport_layer
         
         
+# Configuracion.get_by_id(1).set_protocol(2)
         
 
 # Definicion modelo Loss

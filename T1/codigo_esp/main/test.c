@@ -254,8 +254,10 @@ void set_protocol_2(char *message, char* ID_protocol, char* Transport_Layer){
     message[11] = 0; // Tamano del mensaje
 
     message[17] = (char) gen_tmp(); // temp
+    printf("Temperatura: %d\n", message[17]);
     float fpress = gen_pres();
     int press = *((int*)&fpress);
+    printf("Presion: %f\n", fpress);
 
     message[18] = (char) (press >> 24 & 0xFF);
     message[19] = (char) (press >> 16 & 0xFF);
@@ -263,13 +265,14 @@ void set_protocol_2(char *message, char* ID_protocol, char* Transport_Layer){
     message[21] = (char) (press & 0xFF);
 
     message[22] = (char) gen_hum(); // hum
-
+    printf("Humedad: %d\n", message[22]);
     float fco = gen_co();
     int co = *((int*)&fco);
     message[23] = (char) (co >> 24 & 0xFF);
     message[24] = (char) (co >> 16 & 0xFF);
     message[25] = (char) (co >> 8 & 0xFF);
     message[26] = (char) (co & 0xFF);
+    printf("CO: %f\n", fco);
 
 }
 

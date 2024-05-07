@@ -75,7 +75,7 @@ def parse_protocol_0(data):
 def parse_protocol_1(data):
     protocol_0 = parse_protocol_0(data)
     timestamp = data[13:17]
-
+    print("timestamp", timestamp) 
     return {
         **protocol_0,
         'timestamp': timestamp
@@ -84,9 +84,13 @@ def parse_protocol_1(data):
 def parse_protocol_2(data):
     protocol_1 = parse_protocol_1(data)
     temp = struct.unpack('<B', data[17:19])[0]
+    print("temp", temp)
     press = struct.unpack('<i', data[19:23])[0]
+    print("press", press)
     hum = struct.unpack('<B', data[23:24])[0]
+    print("hum", hum)
     co = struct.unpack('<f', data[24:28])[0]
+    print("co", co)
 
     return {
         **protocol_1,
@@ -113,18 +117,6 @@ def add_data(data):
 
     return
 
-def change_protocol(ID_protocol):
-    if ID_protocol == '0':
-        
-        return  
-    elif ID_protocol == '1':
-        return
-    elif ID_protocol == '2':
-        return
-    elif ID_protocol == '3':
-        return
-    elif ID_protocol == '4':
-        return
 
 def get_transport_layer(data):
     return
