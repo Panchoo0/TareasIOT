@@ -34,7 +34,7 @@ class Datos(BaseModel):
     temp = IntegerField()
     press = CharField()
     hum = IntegerField()
-    co = CharField()
+    co = FloatField()
     acc_x = ArrayField(FloatField)
     acc_y = ArrayField(FloatField)
     acc_z = ArrayField(FloatField)
