@@ -1,5 +1,5 @@
 import socket
-
+import struct
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
 PORT_UDP = 1235
@@ -31,19 +31,59 @@ socketTCP.listen()
 #                 respuesta = "tu mensaje es: " + data.decode('utf-8')
 #                 conn.sendall(respuesta.encode('utf-8'))  # Envía la respuesta al cliente
 
+def parse_headers(data):
+    if len(data) < 12:
+        return None
+    
+    id = struct.unpack('<h', data[:2])[0]
+    mac = struct.unpack('<6s', data[2:8])[0].decode('utf-8')
+
+    Transport_layer = struct.unpack('<c', data[8:9])[0]
+    ID_Protocol = struct.unpack('<c', data[9:10])[0]
+
+    msg_len = struct.unpack('<H', data[10:12])[0]
+
+    return {
+        'id': id,
+        'mac': mac,
+        'Transport_layer': Transport_layer,
+        'ID_Protocol': ID_Protocol,
+        'msg_len': msg_len
+    }
+
+def parse_protocol_0(data):
+    headers = parse_headers(data)
+
+    batt_lvl = struct.unpack('<B', data[12:13])[0]
+
+    return {
+        **headers,
+        'batt_lvl': batt_lvl
+    }
+
+
+def parse_data(data):
+    protocol = struct.unpack('<c', data[8:9])[0]
+    if protocol == b'\x00':
+        return parse_protocol_0(data)
+    else:
+        return None
+
+
+def add_data(data):
+    
+    return
 
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
-    print('Conectado por', addr)
-    print(conn)
-
     ID_protocol, Transport_Layer = (0, "TCP") # Aquí se debe hacer la consulta a la base de datos
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
     conn.sendall(coded_message.encode('utf-8'))
-    print(Transport_Layer)
+
     if Transport_Layer == "TCP":
         data = conn.recv(1024)  # Recibe hasta 1024 bytes del cliente
         print("Recibido: ", data)
+        print(parse_data(data))
         conn.close()
 
     elif Transport_Layer == "UDP":

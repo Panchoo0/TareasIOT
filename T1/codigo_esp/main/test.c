@@ -384,6 +384,21 @@ void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
     }
 }
 
+int get_procotol_length(char *ID_protocol){
+    if (strcmp(ID_protocol, "0") == 0){
+        return 13;
+    } else if (strcmp(ID_protocol, "1") == 0){
+        return 17;
+    } else if (strcmp(ID_protocol, "2") == 0){
+        return 27;
+    } else if (strcmp(ID_protocol, "3") == 0){
+        return 55;
+    } else if (strcmp(ID_protocol, "4") == 0){
+        return 48027;
+    }
+    return 0;
+}
+
 char *set_message(char* ID_protocol, char* Transport_Layer){
     char *message = NULL;
     if (strcmp(ID_protocol, "0") == 0){
@@ -428,16 +443,6 @@ void socket_udp(){
     close(sock);
 }
 
-void printBinary(int num) {
-    // Number of bits in an integer
-    int numBits = sizeof(num) * 8;
-    // Loop through each bit, starting from the most significant bit
-    for (int i = numBits - 1; i >= 0; i--) {
-        // Check if the i-th bit is set (1) or unset (0)
-        printf("%d", (num >> i) & 1);
-    }
-    printf("\n");
-}
 
 void socket_tcp(){
     struct sockaddr_in server_addr;
@@ -459,21 +464,6 @@ void socket_tcp(){
         return;
     }
 
-    // Enviar mensaje "Hola Mundo"
-    // send(sock, "hola mundo", strlen("hola mundo"), 0);
-
-    // Recibir respuesta
-
-    // char rx_buffer[128];
-    // int rx_len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
-    // if (rx_len < 0) {
-    //     ESP_LOGE(TAG, "Error al recibir datos");
-    //     return;
-    // }
-    // ESP_LOGI(TAG, "Datos recibidos: %s", rx_buffer);
-    
-    // // Cerrar el socket
-    // close(sock);
 
     ESP_LOGI(TAG, "Esperando a recibir los datos\n");
     char rx_buffer[128];
@@ -499,27 +489,16 @@ void socket_tcp(){
     ESP_LOGI(TAG, "Protocolo TCP\n");
     ESP_LOGI(TAG, "Protocolo %s\n", ID_protocol);
     char *message = set_message(ID_protocol, Transport_Layer);
-    send(sock, message, sizeof(message), 0);
+    int size = get_procotol_length(ID_protocol);
+
+    ESP_LOGI(TAG, "Largo %d\n", size);
+
+    send(sock, message, size, 0);
+    free(message);
 
     // esp_deep_sleep_enable_timer_wakeup(60000000); // 10000000 us = 10 s
 
     // esp_deep_sleep_start();
-
-    float floatValue = 3.14;
-    int intValue;
-
-    // Type punning using pointers
-    intValue = *((int*)&floatValue);
-
-    printf("Float value: %f\n", floatValue);
-    printf("Integer value with the same bits: %d\n", intValue);
-
-    // Print binary representations
-    printf("Binary representation of float value:\n");
-    printBinary(*((int*)&floatValue));
-    printf("Binary representation of integer value:\n");
-    printBinary(intValue);
-
     esp_deep_sleep(60000000);
 
 
