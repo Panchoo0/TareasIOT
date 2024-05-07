@@ -92,3 +92,8 @@ class Loss(BaseModel):
 
 
 ## Ver la documentación de peewee para más información, es super parecido a Django
+
+def create_tables():
+    with db:
+        db.create_tables([Datos, Logs, Configuracion, Loss])
+        Configuracion.create(ID_protocol='0', Transport_Layer='TCP')
