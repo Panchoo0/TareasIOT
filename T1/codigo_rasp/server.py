@@ -143,6 +143,8 @@ def parse_data(data):
         return parse_protocol_1(data)
     elif protocol == b'\x02':
         return parse_protocol_2(data)
+    elif protocol == b'\x03':
+        return parse_protocol_3(data)
 
 
 def add_data(data):

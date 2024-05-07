@@ -137,7 +137,7 @@ u_char gen_batt_lvl(){
 int gen_tmp(){
     return (rand() % 25) + 5;
 }
-float gen_rand_float(int range, int min) {
+float gen_rand_float(float range, int min) {
     return ((float)rand()/(float)(RAND_MAX/range)) + min;
     
 } 
@@ -263,11 +263,6 @@ void set_protocol_2(char *message, char* ID_protocol, char* Transport_Layer){
     message[20] = (char) (press >> 8 & 0xFF);
     message[21] = (char) (press & 0xFF);
 
-    printf("p1 %d\n", message[18]);
-    printf("p2 %d\n", message[19]);
-    printf("p3 %d\n", message[20]);
-    printf("p4 %d\n", message[21]);
-
     message[22] = (char) gen_hum(); // hum
     printf("Humedad: %d\n", message[22]);
     float fco = gen_co();
@@ -286,15 +281,22 @@ void set_protocol_3(char *message,  char* ID_protocol, char* Transport_Layer){
 
     message[10] = 55; // Tamaño del mensaje
     message[11] = 0; // Tamano del mensaje
-    printf("Tamaño del mensaje: %d\n", message[10]);
 
     float fampx = gen_ampx();
     float fampy = gen_ampy();
     float fampz = gen_ampz();
 
+    printf("fampx: %f\n", fampx);
+    printf("fampy: %f\n", fampy);
+    printf("fampz: %f\n", fampz);
+
     float ffreqx = gen_freqx();
     float ffreqy = gen_freqy();
     float ffreqz = gen_freqz();
+
+    printf("ffreqx: %f\n", ffreqx);
+    printf("ffreqy: %f\n", ffreqy);
+    printf("ffreqz: %f\n", ffreqz);
 
     int ampx = *((int*)&fampx);
     int ampy = *((int*)&fampy);
@@ -307,7 +309,7 @@ void set_protocol_3(char *message,  char* ID_protocol, char* Transport_Layer){
     float frms = rms(fampx, fampy, fampz);
     int rms = *((int*)&frms);
 
-    printf("Datos generados\n")
+    printf("RMS: %f\n", frms);
 
     message[27] = (char) (rms >> 24 & 0xFF);
     message[28] = (char) (rms >> 16 & 0xFF);
@@ -344,7 +346,6 @@ void set_protocol_3(char *message,  char* ID_protocol, char* Transport_Layer){
     message[53] = (char) (freqz >> 8 & 0xFF);
     message[54] = (char) (freqz & 0xFF);
 
-    printf("Datos agregados\n")
 
 }
 
