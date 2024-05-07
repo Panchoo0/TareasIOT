@@ -73,6 +73,16 @@ def parse_float(d_bytes):
 
     return f
 
+def parse_int(d_bytes):
+    i_1 = struct.unpack('<B', d_bytes[0:1])[0]
+    i_2 = struct.unpack('<B', d_bytes[1:2])[0]
+    i_3 = struct.unpack('<B', d_bytes[2:3])[0]
+    i_4 = struct.unpack('<B', d_bytes[3:4])[0]
+
+    i = i_1 << 24 | i_2 << 16 | i_3 << 8 | i_4
+
+    return i
+
 def parse_protocol_0(data):
     headers = parse_headers(data)
     print("parsed",headers)
@@ -97,14 +107,8 @@ def parse_protocol_2(data):
     protocol_1 = parse_protocol_1(data)
     temp = struct.unpack('<B', data[17:18])[0]
     print("temp", temp)
-    press = struct.unpack('<i', data[18:22])[0]
+    press = parse_int(data[18:22])
     print("press", press)
-    print("press bytes", data[18:22])
-    print(len(data[18:22]))
-    print("p1", struct.unpack('<B', data[18:19])[0])
-    print("p2", struct.unpack('<B', data[19:20])[0])
-    print("p3", struct.unpack('<B', data[20:21])[0])
-    print("p4", struct.unpack('<B', data[21:22])[0])
     
     hum = struct.unpack('<B', data[22:23])[0]
     print("hum", hum)
