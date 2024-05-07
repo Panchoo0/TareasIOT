@@ -255,9 +255,8 @@ void set_protocol_2(char *message, char* ID_protocol, char* Transport_Layer){
 
     message[17] = (char) gen_tmp(); // temp
     printf("Temperatura: %d\n", message[17]);
-    float fpress = gen_pres();
-    int press = *((int*)&fpress);
-    printf("Presion: %f\n", fpress);
+    int press = gen_pres();
+    printf("Presion: %i\n", press);
 
     message[18] = (char) (press >> 24 & 0xFF);
     message[19] = (char) (press >> 16 & 0xFF);
@@ -273,6 +272,13 @@ void set_protocol_2(char *message, char* ID_protocol, char* Transport_Layer){
     message[25] = (char) (co >> 8 & 0xFF);
     message[26] = (char) (co & 0xFF);
     printf("CO: %f\n", fco);
+    printf("COi: %i\n", co);
+
+    int co_reparse = message[23] << 24 | message[24] << 16 | message[25] << 8 | message[26];
+    printf("CO reparse: %i\n", co_reparse);
+
+    float fco_reparse = *((float*)&co_reparse);
+    printf("COf reparse: %f\n", fco_reparse);
 
 }
 

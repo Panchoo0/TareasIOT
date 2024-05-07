@@ -91,6 +91,9 @@ def parse_protocol_2(data):
     print("hum", hum)
     co = struct.unpack('<f', data[23:27])[0]
     print("co", co)
+    ico = struct.unpack('<i', data[23:27])[0]
+    print("co raw", data[23:27])
+    print("ico", ico)
 
     return {
         **protocol_1,
@@ -103,8 +106,6 @@ def parse_protocol_2(data):
 
 def parse_data(data):
     protocol = struct.unpack('<c', data[9:10])[0]
-    print(data[9:10])
-    print(protocol)
     if protocol == b'\x00':
         return parse_protocol_0(data)
     elif protocol == b'\x01':

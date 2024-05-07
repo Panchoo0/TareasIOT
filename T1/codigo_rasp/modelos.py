@@ -1,4 +1,4 @@
-from peewee import Model, PostgresqlDatabase, DateTimeField, CharField, IntegerField
+from peewee import Model, PostgresqlDatabase, DateTimeField, CharField, IntegerField, FloatField
 from playhouse.postgres_ext import ArrayField
 
 # Configuración de la base de datos
@@ -35,12 +35,12 @@ class Datos(BaseModel):
     press = CharField()
     hum = IntegerField()
     co = CharField()
-    acc_x = ArrayField()
-    acc_y = ArrayField()
-    acc_z = ArrayField()
-    rgyr_x = ArrayField()
-    rgyr_y = ArrayField()
-    rgyr_z = ArrayField()
+    acc_x = ArrayField(FloatField)
+    acc_y = ArrayField(FloatField)
+    acc_z = ArrayField(FloatField)
+    rgyr_x = ArrayField(FloatField)
+    rgyr_y = ArrayField(FloatField)
+    rgyr_z = ArrayField(FloatField)
     # Extra
     ID_device = CharField()
     MAC = CharField()
@@ -62,13 +62,21 @@ class Configuracion(BaseModel):
     ID_protocol = CharField()
     Transport_Layer = CharField()
 
+    def get_ID_protocol(self):
+        return self.ID_protocol
+
+    def get_Transport_layer(self):
+        return self.Transport_Layer
+    
     def set_protocol(self, new_ID):
         config = Configuracion.objects.filter(ID_protocol = self.ID_protocol)
-        config.ID_protocol = new_ID
+        config[0].ID_protocol = new_ID
         config.save()
     
     def set_Transport_layer(self, new_Transport_layer):
-        self.Transport_layer = new_Transport_layer
+        config = Configuracion.objects.filter(Transport_layer = self.ID_protocol)
+        config[0].Transport_layer = new_Transport_layer
+        config.save()
         
         
 # Configuracion.get_by_id(1).set_protocol(2)
