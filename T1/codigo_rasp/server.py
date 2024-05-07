@@ -78,9 +78,13 @@ def add_data(data):
 
 def change_protocol(data, ID_protocol):
     headers_data = parse_headers(data)
+    batt_lvl = struct.unpack('<B', data[12:13])[0]
     if ID_protocol == '0':
         headers_data['ID_Protocol'] = 0
-        return parse_protocol_0()
+        return {
+            **headers_data,
+            'batt_lvl': batt_lvl
+        }
     elif ID_protocol == '1':
         headers_data['ID_Protocol'] = 1
         return
@@ -117,7 +121,8 @@ def main():
 while True:
     try:
         main()
-    except:
+    except Exception as e:
+        print(e)
         socketTCP.close()
         socketUDP.close()
         break
