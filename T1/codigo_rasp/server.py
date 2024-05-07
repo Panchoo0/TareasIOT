@@ -96,7 +96,8 @@ def parse_protocol_2(data):
     co_4 = struct.unpack('<B', data[26:27])[0]
 
     co = co_1 << 24 | co_2 << 16 | co_3 << 8 | co_4
-    co = bytes([co_1, co_2, co_3, co_4])
+    co = co.to_bytes(4, 'little')
+    co = struct.unpack('<f', co)[0]
     print("co", co)
     co = float(co)
     print("fco", co)
