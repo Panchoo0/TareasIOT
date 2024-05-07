@@ -87,6 +87,7 @@ def parse_protocol_2(data):
     print("temp", temp)
     press = struct.unpack('<i', data[18:22])[0]
     print("press", press)
+    print("press bytes", data[18:22])
     hum = struct.unpack('<B', data[22:23])[0]
     print("hum", hum)
     
@@ -98,9 +99,6 @@ def parse_protocol_2(data):
     co = co_1 << 24 | co_2 << 16 | co_3 << 8 | co_4
     co = co.to_bytes(4, 'little')
     co = struct.unpack('<f', co)[0]
-    print("co", co)
-    co = float(co)
-    print("fco", co)
 
     return {
         **protocol_1,
