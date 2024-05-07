@@ -1,4 +1,4 @@
-from peewee import Model, PostgresqlDatabase
+from peewee import Model, PostgresqlDatabase, DateTimeField, CharField, IntegerField
 
 # Configuración de la base de datos
 db_config = {
@@ -42,7 +42,7 @@ class Configuracion(BaseModel):
 # Definicion modelo Loss
 # timestamp(escritura datos - envio de datos), packet_loss
 class Loss(BaseModel):
-    comm_timestamp = Integer()
+    comm_timestamp = IntegerField()
     packet_loss = CharField()
 
 
