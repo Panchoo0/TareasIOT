@@ -64,6 +64,8 @@ def parse_protocol_0(data):
 
 def parse_data(data):
     protocol = struct.unpack('<c', data[8:9])[0]
+    print(data[8:9])
+    print(protocol)
     if protocol == b'\x00':
         return parse_protocol_0(data)
     else:
@@ -71,8 +73,16 @@ def parse_data(data):
 
 
 def add_data(data):
+
+    return
+
+def change_protocol(data):
     
     return
+
+def get_transport_layer(data):
+    return
+
 
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
