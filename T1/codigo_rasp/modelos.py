@@ -7,7 +7,7 @@ db_config = {
     'port': 5432, 
     'user': 'postgres', 
     'password': 'postgres', 
-    'database': 'db'
+    'database': 'iot_db'
 }
 db = PostgresqlDatabase(**db_config)
 
