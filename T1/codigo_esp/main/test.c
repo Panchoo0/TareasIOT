@@ -14,6 +14,12 @@
 #include "nvs_flash.h"
 #include "lwip/sockets.h" // Para sockets
 
+#include <time.h>
+#include <stdlib.h>
+#include <math.h>
+#include "esp_mac.h"
+
+
 //Credenciales de WiFi
 
 #define WIFI_SSID "iotcositas"
@@ -117,6 +123,288 @@ void nvs_init() {
     ESP_ERROR_CHECK(ret);
 }
 
+u_char gen_batt_lvl(){
+    return (u_char) rand() % 100;
+}
+
+// void gen_time_stamp(char *time_stamp){
+//     time_t t = time(NULL);
+//     struct tm tm = *localtime(&t);
+//     sprintf(time_stamp, "%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900,
+//             tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+// }
+
+int gen_tmp(){
+    return (rand() % 25) + 5;
+}
+float gen_rand_float(int range, int min) {
+    return ((float)rand()/(float)(RAND_MAX/range)) + min;
+    
+} 
+int gen_hum(){
+    return (rand() % 50) + 30;
+}
+
+int gen_pres(){
+    return (rand() % 200) + 1000;
+}
+
+float gen_co(){
+    return gen_rand_float(170, 30);
+}
+
+float gen_ampx(){
+    return gen_rand_float(0.12 - 0.0059, 0.0059);
+}
+
+float gen_ampy(){
+    return gen_rand_float(0.11 - 0.0041, 0.0041);
+}
+
+float gen_ampz(){
+    return gen_rand_float(0.15 - 0.008, 0.008);
+}
+
+float gen_freqx(){
+    return gen_rand_float(2, 29);
+}
+
+float gen_freqy(){
+    return gen_rand_float(2, 59);
+}
+
+float gen_freqz(){
+    return gen_rand_float(2, 89);
+}
+
+float rms(float x, float y, float z){
+    return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+}
+
+void acc(int *data) {
+    for (int i =0; i < 2000; i++) {
+        float num = gen_rand_float(32, -16);
+        data[i] = *((int*) &num);
+    }
+}
+
+void rgyro(int *data) {
+    for (int i =0; i < 2000; i++) {
+        float num = gen_rand_float(2000, -1000);
+        data[i] = *((int*)&num);
+    }
+}
+
+void mac(uint8_t *base_mac_addr) {
+    esp_err_t ret = ESP_OK;
+    esp_read_mac(base_mac_addr, ESP_MAC_WIFI_STA);
+}
+
+void set_headers(char *headers, char *ID_protocol, char *Transport_Layer) {
+    short id = 0;
+    uint8_t base_mac_addr[6] = {0};
+    mac(base_mac_addr);
+    headers[0] = (char)id >> 8;
+    headers[1] = (char)id & 0xFF;
+    headers[2] = base_mac_addr[0];
+    headers[3] = base_mac_addr[1];
+    headers[4] = base_mac_addr[2];
+    headers[5] = base_mac_addr[3];
+    headers[6] = base_mac_addr[4];
+    headers[7] = base_mac_addr[5];
+
+    if (strcmp(Transport_Layer, "UDP") == 0) {
+        headers[8] = 0;
+    } else {
+        headers[8] = 1;
+    }
+
+    headers[9] = (char)atoi(ID_protocol);
+}
+
+void set_protocol_0(char *message, char* ID_protocol, char* Transport_Layer){
+    message[10] = 13; // Tamaño del mensaje
+    message[11] = 0; // Tamano del mensaje
+    message[12] = (char) gen_batt_lvl(); // batt lvl
+    set_headers(message, ID_protocol, Transport_Layer);
+}
+
+void set_protocol_1(char *message, char* ID_protocol, char* Transport_Layer){
+    set_headers(message, ID_protocol, Transport_Layer);
+    set_protocol_0(message, ID_protocol, Transport_Layer);
+
+    message[10] = 17; // Tamaño del mensaje
+    message[11] = 0; // Tamano del mensaje
+
+    // Agregar timestamp --> gettimeofday() <--
+    message[13] = 0;
+    message[14] = 0;
+    message[15] = 0;
+    message[16] = 0;
+}
+
+void set_protocol_2(char *message, char* ID_protocol, char* Transport_Layer){
+    set_headers(message, ID_protocol, Transport_Layer);
+    set_protocol_1(message, ID_protocol, Transport_Layer);
+
+    message[10] = 27; // Tamaño del mensaje
+    message[11] = 0; // Tamano del mensaje
+
+    message[17] = (char) gen_tmp(); // temp
+    float fpress = gen_pres();
+    int press = *((int*)&fpress);
+
+    message[18] = (char) (press >> 24 & 0xFF);
+    message[19] = (char) (press >> 16 & 0xFF);
+    message[20] = (char) (press >> 8 & 0xFF);
+    message[21] = (char) (press & 0xFF);
+
+    message[22] = (char) gen_hum(); // hum
+
+    float fco = gen_co();
+    int co = *((int*)&fco);
+    message[23] = (char) (co >> 24 & 0xFF);
+    message[24] = (char) (co >> 16 & 0xFF);
+    message[25] = (char) (co >> 8 & 0xFF);
+    message[26] = (char) (co & 0xFF);
+
+}
+
+void set_protocol_3(char *message,  char* ID_protocol, char* Transport_Layer){
+    set_headers(message, ID_protocol, Transport_Layer);
+    set_protocol_2(message, ID_protocol, Transport_Layer);
+
+    message[10] = 55; // Tamaño del mensaje
+    message[11] = 0; // Tamano del mensaje
+
+    float fampx = gen_ampx();
+    float fampy = gen_ampy();
+    float fampz = gen_ampz();
+
+    float ffreqx = gen_freqx();
+    float ffreqy = gen_freqy();
+    float ffreqz = gen_freqz();
+
+    int ampx = *((int*)&fampx);
+    int ampy = *((int*)&fampy);
+    int ampz = *((int*)&fampz);
+
+    int freqx = *((int*)&ffreqx);
+    int freqy = *((int*)&ffreqy);
+    int freqz = *((int*)&ffreqz);
+
+    float frms = rms(fampx, fampy, fampz);
+    int rms = *((int*)&frms);
+
+    message[27] = (char) (rms >> 24 & 0xFF);
+    message[28] = (char) (rms >> 16 & 0xFF);
+    message[29] = (char) (rms >> 8 & 0xFF);
+    message[30] = (char) (rms & 0xFF);
+
+    message[31] = (char) (ampx >> 24 & 0xFF);
+    message[32] = (char) (ampx >> 16 & 0xFF);
+    message[33] = (char) (ampx >> 8 & 0xFF);
+    message[34] = (char) (ampx & 0xFF);
+
+    message[35] = (char) (freqx >> 24 & 0xFF);
+    message[36] = (char) (freqx >> 16 & 0xFF);
+    message[37] = (char) (freqx >> 8 & 0xFF);
+    message[38] = (char) (freqx & 0xFF);
+
+    message[39] = (char) (ampy >> 24 & 0xFF);
+    message[40] = (char) (ampy >> 16 & 0xFF);
+    message[41] = (char) (ampy >> 8 & 0xFF);
+    message[42] = (char) (ampy & 0xFF);
+
+    message[43] = (char) (freqy >> 24 & 0xFF);
+    message[44] = (char) (freqy >> 16 & 0xFF);
+    message[45] = (char) (freqy >> 8 & 0xFF);
+    message[46] = (char) (freqy & 0xFF);
+
+    message[47] = (char) (ampz >> 24 & 0xFF);
+    message[48] = (char) (ampz >> 16 & 0xFF);
+    message[49] = (char) (ampz >> 8 & 0xFF);
+    message[50] = (char) (ampz & 0xFF);
+
+    message[51] = (char) (freqz >> 24 & 0xFF);
+    message[52] = (char) (freqz >> 16 & 0xFF);
+    message[53] = (char) (freqz >> 8 & 0xFF);
+    message[54] = (char) (freqz & 0xFF);
+
+}
+
+void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
+    set_headers(message, ID_protocol, Transport_Layer);
+    set_protocol_2(message, ID_protocol, Transport_Layer);
+
+    int size = 48027;
+    message[10] = (char) (size >> 16 & 0xFF); // Tamaño del mensaje
+    message[11] = (char) (size & 0xFF); // Tamano del mensaje
+
+    int acc_x[2000];
+    int acc_y[2000];
+    int acc_z[2000];
+    acc(acc_x);
+    acc(acc_y);
+    acc(acc_z);
+
+    int gyro_x[2000];
+    int gyro_y[2000];
+    int gyro_z[2000];
+    rgyro(gyro_x);
+    rgyro(gyro_y);
+    rgyro(gyro_z);
+
+    for (int i = 0; i < 2000; i++) {
+        message[27 + i] = (char) (acc_x[i] >> 24 & 0xFF);
+        message[27 + (i + 1) * 4] = (char) (acc_x[i] >> 16 & 0xFF);
+        message[27 + (i + 2) * 4] = (char) (acc_x[i] >> 8 & 0xFF);
+        message[27 + (i + 3) * 4] = (char) (acc_x[i] & 0xFF);
+
+        message[27 + 8000 + i] = (char) (acc_y[i] >> 24 & 0xFF);
+        message[27 + 8000 + (i + 1) * 4] = (char) (acc_y[i] >> 16 & 0xFF);
+        message[27 + 8000 + (i + 2) * 4] = (char) (acc_y[i] >> 8 & 0xFF);
+        message[27 + 8000 + (i + 3) * 4] = (char) (acc_y[i] & 0xFF);
+
+        message[27 + 16000 + i] = (char) (acc_z[i] >> 24 & 0xFF);
+        message[27 + 16000 + (i + 1) * 4] = (char) (acc_z[i] >> 16 & 0xFF);
+        message[27 + 16000 + (i + 2) * 4] = (char) (acc_z[i] >> 8 & 0xFF);
+        message[27 + 16000 + (i + 3) * 4] = (char) (acc_z[i] & 0xFF);
+
+        message[27 + 24000 + i] = (char) (gyro_x[i] >> 24 & 0xFF);
+        message[27 + 24000 + (i + 1) * 4] = (char) (gyro_x[i] >> 16 & 0xFF);
+        message[27 + 24000 + (i + 2) * 4] = (char) (gyro_x[i] >> 8 & 0xFF);
+        message[27 + 24000 + (i + 3) * 4] = (char) (gyro_x[i] & 0xFF);
+
+        message[27 + 32000 + i] = (char) (gyro_y[i] >> 24 & 0xFF);
+        message[27 + 32000 + (i + 1) * 4] = (char) (gyro_y[i] >> 16 & 0xFF);
+        message[27 + 32000 + (i + 2) * 4] = (char) (gyro_y[i] >> 8 & 0xFF);
+        message[27 + 32000 + (i + 3) * 4] = (char) (gyro_y[i] & 0xFF);
+
+    }
+}
+
+char *set_message(char* ID_protocol, char* Transport_Layer){
+    char *message = NULL;
+    if (strcmp(ID_protocol, "0") == 0){
+        message = (char *) malloc(13 * sizeof(char));
+        set_protocol_0(message, ID_protocol, Transport_Layer);
+    } else if (strcmp(ID_protocol, "1") == 0){
+        message = (char *) malloc(17 * sizeof(char));
+        set_protocol_1(message, ID_protocol, Transport_Layer);
+    } else if (strcmp(ID_protocol, "2") == 0){
+        message = (char *) malloc(27 * sizeof(char));
+        set_protocol_2(message, ID_protocol, Transport_Layer);
+    } else if (strcmp(ID_protocol, "3") == 0){
+        message = (char *) malloc(55 * sizeof(char));
+        set_protocol_3(message, ID_protocol, Transport_Layer);
+    } else if (strcmp(ID_protocol, "4") == 0){
+        message = (char *) malloc(48027 * sizeof(char));
+        set_protocol_4(message, ID_protocol, Transport_Layer);
+    }
+
+    return message;
+}
 
 void socket_udp(){
     struct sockaddr_in server_addr;
@@ -138,8 +426,17 @@ void socket_udp(){
 
     ESP_LOGI(TAG, "Se enviaron los datos");
     close(sock);
+}
 
-
+void printBinary(int num) {
+    // Number of bits in an integer
+    int numBits = sizeof(num) * 8;
+    // Loop through each bit, starting from the most significant bit
+    for (int i = numBits - 1; i >= 0; i--) {
+        // Check if the i-th bit is set (1) or unset (0)
+        printf("%d", (num >> i) & 1);
+    }
+    printf("\n");
 }
 
 void socket_tcp(){
@@ -200,13 +497,28 @@ void socket_tcp(){
     }
 
     ESP_LOGI(TAG, "Protocolo TCP\n");
-    // Enviar el paquete y luego entrar en modo deep sleep
-    send(sock, "hola mundo", strlen("hola mundo"), 0);
-    close(sock);
+    ESP_LOGI(TAG, "Protocolo %s\n", ID_protocol);
+    char *message = set_message(ID_protocol, Transport_Layer);
+    send(sock, message, sizeof(message), 0);
 
     // esp_deep_sleep_enable_timer_wakeup(60000000); // 10000000 us = 10 s
 
     // esp_deep_sleep_start();
+
+    float floatValue = 3.14;
+    int intValue;
+
+    // Type punning using pointers
+    intValue = *((int*)&floatValue);
+
+    printf("Float value: %f\n", floatValue);
+    printf("Integer value with the same bits: %d\n", intValue);
+
+    // Print binary representations
+    printf("Binary representation of float value:\n");
+    printBinary(*((int*)&floatValue));
+    printf("Binary representation of integer value:\n");
+    printBinary(intValue);
 
     esp_deep_sleep(60000000);
 
@@ -219,5 +531,8 @@ void app_main(void){
     nvs_init();
     wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
     ESP_LOGI(TAG,"Conectado a WiFi!\n");
+    srand(time(NULL));
     socket_tcp();
+
+    
 }

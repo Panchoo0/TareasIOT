@@ -43,12 +43,16 @@ def main():
     print(Transport_Layer)
     if Transport_Layer == "TCP":
         data = conn.recv(1024)  # Recibe hasta 1024 bytes del cliente
-        print("Recibido: ", data.decode('utf-8'))
+        print("Recibido: ", data)
         conn.close()
 
     elif Transport_Layer == "UDP":
         data, addr = socketUDP.recvfrom(1024)
-        print("Recibido: ", data.decode('utf-8'))
+        print("Recibido: ", data)
 
 while True:
-    main()
+    try:
+        main()
+    except:
+        socketTCP.close()
+        socketUDP.close()
