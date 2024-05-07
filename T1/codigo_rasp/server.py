@@ -100,6 +100,12 @@ def parse_protocol_2(data):
     press = struct.unpack('<i', data[18:22])[0]
     print("press", press)
     print("press bytes", data[18:22])
+    print(len(data[18:22]))
+    print("p1", struct.unpack('<B', data[18:19])[0])
+    print("p2", struct.unpack('<B', data[19:20])[0])
+    print("p3", struct.unpack('<B', data[20:21])[0])
+    print("p4", struct.unpack('<B', data[21:22])[0])
+    
     hum = struct.unpack('<B', data[22:23])[0]
     print("hum", hum)
     
