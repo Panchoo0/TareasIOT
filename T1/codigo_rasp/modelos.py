@@ -24,6 +24,7 @@ class Datos(BaseModel):
     timestamp = DateTimeField()
     ID_device = CharField()
     MAC = CharField()
+    
 
 # Definicion modelo Logs
 # Conexiones recibidas por el servidor: Id_device, Transport_Layer, protocolo usado, timestamp

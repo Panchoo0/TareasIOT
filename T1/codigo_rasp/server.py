@@ -1,6 +1,6 @@
 import socket
 import struct
-from modelos import *
+from modelos import db, Configuracion
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
 PORT_UDP = 1235
@@ -37,8 +37,10 @@ def parse_headers(data):
         return None
     
     id = struct.unpack('<h', data[:2])[0]
-    mac = struct.unpack('<6s', data[2:8])[0].decode('utf-8')
-
+    print("id", id)
+    mac = struct.unpack('<6B', data[2:8])[0]
+    print("mac", mac)
+    
     Transport_layer = struct.unpack('<c', data[8:9])[0]
     ID_Protocol = struct.unpack('<c', data[9:10])[0]
 
@@ -78,22 +80,18 @@ def add_data(data):
 
     return
 
-def change_protocol(data, ID_protocol):
-    headers_data = parse_headers(data)
+def change_protocol(ID_protocol):
     if ID_protocol == '0':
-        headers_data['ID_Protocol'] = 0
+        new_protocol = Configuracion()
+        new_protocol.ID_protocol = "0"
         return 
     elif ID_protocol == '1':
-        headers_data['ID_Protocol'] = 1
         return
     elif ID_protocol == '2':
-        headers_data['ID_Protocol'] = 2
         return
     elif ID_protocol == '3':
-        headers_data['ID_Protocol'] = 3
         return
     elif ID_protocol == '4':
-        headers_data['ID_Protocol'] = 4
         return
 
 def get_transport_layer(data):
