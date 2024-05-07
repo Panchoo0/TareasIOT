@@ -212,6 +212,7 @@ void set_headers(char *headers, char *ID_protocol, char *Transport_Layer) {
     headers[5] = base_mac_addr[3];
     headers[6] = base_mac_addr[4];
     headers[7] = base_mac_addr[5];
+    printf("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", base_mac_addr[0], base_mac_addr[1], base_mac_addr[2], base_mac_addr[3], base_mac_addr[4], base_mac_addr[5]);
 
     if (strcmp(Transport_Layer, "UDP") == 0) {
         headers[8] = 0;
@@ -220,12 +221,14 @@ void set_headers(char *headers, char *ID_protocol, char *Transport_Layer) {
     }
 
     headers[9] = (char)atoi(ID_protocol);
+    printf("ID Protocol: %d\n", headers[9]);
 }
 
 void set_protocol_0(char *message, char* ID_protocol, char* Transport_Layer){
     message[10] = 13; // Tamaño del mensaje
     message[11] = 0; // Tamano del mensaje
     message[12] = (char) gen_batt_lvl(); // batt lvl
+    printf("Batt lvl: %d\n", message[12]);
     set_headers(message, ID_protocol, Transport_Layer);
 }
 

@@ -63,8 +63,8 @@ def parse_protocol_0(data):
 
 
 def parse_data(data):
-    protocol = struct.unpack('<c', data[8:9])[0]
-    print(data[8:9])
+    protocol = struct.unpack('<c', data[9:10])[0]
+    print(data[9:10])
     print(protocol)
     if protocol == b'\x00':
         return parse_protocol_0(data)
@@ -76,9 +76,23 @@ def add_data(data):
 
     return
 
-def change_protocol(data):
-    
-    return
+def change_protocol(data, ID_protocol):
+    headers_data = parse_headers(data)
+    if ID_protocol == '0':
+        headers_data['ID_Protocol'] = 0
+        return parse_protocol_0()
+    elif ID_protocol == '1':
+        headers_data['ID_Protocol'] = 1
+        return
+    elif ID_protocol == '2':
+        headers_data['ID_Protocol'] = 2
+        return
+    elif ID_protocol == '3':
+        headers_data['ID_Protocol'] = 3
+        return
+    elif ID_protocol == '4':
+        headers_data['ID_Protocol'] = 4
+        return
 
 def get_transport_layer(data):
     return
