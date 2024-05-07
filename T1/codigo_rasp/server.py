@@ -121,6 +121,7 @@ while True:
         main()
     except Exception as e:
         print(e)
+    except KeyboardInterrupt:
         socketTCP.close()
         socketUDP.close()
         break
