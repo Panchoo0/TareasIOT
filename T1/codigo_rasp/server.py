@@ -106,3 +106,4 @@ while True:
     except:
         socketTCP.close()
         socketUDP.close()
+        break
