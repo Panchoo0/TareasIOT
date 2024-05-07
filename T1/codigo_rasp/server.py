@@ -61,6 +61,18 @@ def parse_headers(data):
         'msg_len': msg_len
     }
 
+def parse_float(d_bytes):
+    f_1 = struct.unpack('<B', d_bytes[0:1])[0]
+    f_2 = struct.unpack('<B', d_bytes[1:2])[0]
+    f_3 = struct.unpack('<B', d_bytes[2:3])[0]
+    f_4 = struct.unpack('<B', d_bytes[3:4])[0]
+
+    f = f_1 << 24 | f_2 << 16 | f_3 << 8 | f_4
+    f = f.to_bytes(4, 'little')
+    f = struct.unpack('<f', f)[0]
+
+    return f
+
 def parse_protocol_0(data):
     headers = parse_headers(data)
     print("parsed",headers)
@@ -91,14 +103,7 @@ def parse_protocol_2(data):
     hum = struct.unpack('<B', data[22:23])[0]
     print("hum", hum)
     
-    co_1 = struct.unpack('<B', data[23:24])[0]
-    co_2 = struct.unpack('<B', data[24:25])[0]
-    co_3 = struct.unpack('<B', data[25:26])[0]
-    co_4 = struct.unpack('<B', data[26:27])[0]
-
-    co = co_1 << 24 | co_2 << 16 | co_3 << 8 | co_4
-    co = co.to_bytes(4, 'little')
-    co = struct.unpack('<f', co)[0]
+    co = parse_float(data[23:27])
 
     return {
         **protocol_1,
@@ -108,6 +113,27 @@ def parse_protocol_2(data):
         'co': co
     }
 
+def parse_protocol_3(data):
+    protocol_2 = parse_protocol_2(data)
+    rms = parse_float(data[27:31])
+    ampx = parse_float(data[31:35])
+    freqx = parse_float(data[35:39])
+    ampy = parse_float(data[39:43])
+    freqy = parse_float(data[43:47])
+    ampz = parse_float(data[47:51])
+    freqz = parse_float(data[51:55])
+    
+
+    return {
+        **protocol_2,
+        'rms': rms,
+        'ampx': ampx,
+        'ampy': ampy,
+        'ampz': ampz,
+        'freqx': freqx,
+        'freqy': freqy,
+        'freqz': freqz
+    }
 
 def parse_data(data):
     protocol = struct.unpack('<c', data[9:10])[0]
@@ -130,7 +156,7 @@ def get_transport_layer(data):
 
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
-    ID_protocol, Transport_Layer = (2, "TCP") # Aquí se debe hacer la consulta a la base de datos
+    ID_protocol, Transport_Layer = (3, "TCP") # Aquí se debe hacer la consulta a la base de datos
     # ID_protocol2 = Configuracion.get_by_id(1)# Aquí se debe hacer la consulta a la base de datos
     # print('id y layer 2: ',ID_protocol2)
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
