@@ -286,6 +286,7 @@ void set_protocol_3(char *message,  char* ID_protocol, char* Transport_Layer){
 
     message[10] = 55; // Tamaño del mensaje
     message[11] = 0; // Tamano del mensaje
+    printf("Tamaño del mensaje: %d\n", message[10]);
 
     float fampx = gen_ampx();
     float fampy = gen_ampy();
@@ -305,6 +306,8 @@ void set_protocol_3(char *message,  char* ID_protocol, char* Transport_Layer){
 
     float frms = rms(fampx, fampy, fampz);
     int rms = *((int*)&frms);
+
+    printf("Datos generados\n")
 
     message[27] = (char) (rms >> 24 & 0xFF);
     message[28] = (char) (rms >> 16 & 0xFF);
@@ -340,6 +343,8 @@ void set_protocol_3(char *message,  char* ID_protocol, char* Transport_Layer){
     message[52] = (char) (freqz >> 16 & 0xFF);
     message[53] = (char) (freqz >> 8 & 0xFF);
     message[54] = (char) (freqz & 0xFF);
+
+    printf("Datos agregados\n")
 
 }
 
