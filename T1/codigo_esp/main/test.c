@@ -497,6 +497,7 @@ void socket_tcp(){
     ESP_LOGI(TAG, "Largo %d\n", size);
 
     send(sock, message, size, 0);
+    ESP_LOGI(TAG, "Se enviaron los datos\n");
     free(message);
 
     // esp_deep_sleep_enable_timer_wakeup(60000000); // 10000000 us = 10 s

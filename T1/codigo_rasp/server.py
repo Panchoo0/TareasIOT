@@ -38,12 +38,12 @@ def parse_headers(data):
     
     id = struct.unpack('<h', data[:2])[0]
     print("id", id)
-    mac_1 = hex(struct.unpack('<B', data[2:3])[0])
-    mac_2 = hex(struct.unpack('<B', data[3:4])[0])
-    mac_3 = hex(struct.unpack('<B', data[4:5])[0])
-    mac_4 = hex(struct.unpack('<B', data[5:6])[0])
-    mac_5 = hex(struct.unpack('<B', data[6:7])[0])
-    mac_6 = hex(struct.unpack('<B', data[7:8])[0])
+    mac_1 = hex(struct.unpack('<B', data[2:3])[0])[2:]
+    mac_2 = hex(struct.unpack('<B', data[3:4])[0])[2:]
+    mac_3 = hex(struct.unpack('<B', data[4:5])[0])[2:]
+    mac_4 = hex(struct.unpack('<B', data[5:6])[0])[2:]
+    mac_5 = hex(struct.unpack('<B', data[6:7])[0])[2:]
+    mac_6 = hex(struct.unpack('<B', data[7:8])[0])[2:]
 
     mac = f"{mac_1}:{mac_2}:{mac_3}:{mac_4}:{mac_5}:{mac_6}"
     print("mac", mac)
@@ -72,6 +72,30 @@ def parse_protocol_0(data):
         'batt_lvl': batt_lvl
     }
 
+def parse_protocol_1(data):
+    protocol_0 = parse_protocol_0(data)
+    timestamp = data[13:17]
+
+    return {
+        **protocol_0,
+        'timestamp': timestamp
+    }
+
+def parse_protocol_2(data):
+    protocol_1 = parse_protocol_1(data)
+    temp = struct.unpack('<B', data[17:19])[0]
+    press = struct.unpack('<i', data[19:23])[0]
+    hum = struct.unpack('<B', data[23:24])[0]
+    co = struct.unpack('<f', data[24:28])[0]
+
+    return {
+        **protocol_1,
+        'temp': temp,
+        'press': press,
+        'hum': hum,
+        'co': co
+    }
+
 
 def parse_data(data):
     protocol = struct.unpack('<c', data[9:10])[0]
@@ -79,8 +103,10 @@ def parse_data(data):
     print(protocol)
     if protocol == b'\x00':
         return parse_protocol_0(data)
-    else:
-        return None
+    elif protocol == b'\x01':
+        return parse_protocol_1(data)
+    elif protocol == b'\x02':
+        return parse_protocol_2(data)
 
 
 def add_data(data):
@@ -89,9 +115,8 @@ def add_data(data):
 
 def change_protocol(ID_protocol):
     if ID_protocol == '0':
-        # new_protocol = db.
-        new_protocol.ID_protocol = "0"
         
+        return  
     elif ID_protocol == '1':
         return
     elif ID_protocol == '2':
@@ -107,7 +132,7 @@ def get_transport_layer(data):
 
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
-    ID_protocol, Transport_Layer = (0, "TCP") # Aquí se debe hacer la consulta a la base de datos
+    ID_protocol, Transport_Layer = (2, "TCP") # Aquí se debe hacer la consulta a la base de datos
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
     conn.sendall(coded_message.encode('utf-8'))
 

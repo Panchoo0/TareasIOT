@@ -23,23 +23,23 @@ class BaseModel(Model):
 class Datos(BaseModel):
     # Headers
     ID_message = CharField()
-    # MAC_device = 
-    # Transport_layer =
-    # ID_protocol =
-    # Length =  
-    # # Data
-    # Batt_level = IntegerField()
-    # timestamp =
-    # temp
-    # press 
-    # hum 
-    # co 
-    # acc_x 
-    # acc_y 
-    # acc_z 
-    # rgyr_x 
-    # rgyr_y 
-    # rgyr_z
+    MAC_device = CharField()
+    Transport_layer = CharField()
+    ID_protocol = IntegerField()
+    Length = IntegerField()
+    # All data
+    Batt_level = IntegerField()
+    timestamp = DateTimeField()
+    temp = IntegerField()
+    press = CharField()
+    hum = IntegerField()
+    co = CharField()
+    # acc_x = 
+    # acc_y =
+    # acc_z =
+    # rgyr_x =
+    # rgyr_y =
+    # rgyr_z =
     # Extra
     ID_device = CharField()
     MAC = CharField()
@@ -61,12 +61,13 @@ class Configuracion(BaseModel):
     ID_protocol = CharField()
     Transport_Layer = CharField()
 
-    def __init__(self, ID_protocol, Transport_layer, *args, **kwargs) -> None:
-        self.ID_protocol = ID_protocol
-        self.Transport_Layer = Transport_layer
-
-    def set_protocol(new_ID):
-        ID_protocol = new_ID
+    def set_protocol(self, new_ID):
+        self.ID_protocol = new_ID
+    
+    def set_Transport_layer(self, new_Transport_layer):
+        self.Transport_layer = new_Transport_layer
+        
+        
         
 
 # Definicion modelo Loss
