@@ -89,11 +89,16 @@ def parse_protocol_2(data):
     print("press", press)
     hum = struct.unpack('<B', data[22:23])[0]
     print("hum", hum)
-    co = struct.unpack('<f', data[23:27])[0]
+    
+    co_1 = struct.unpack('<B', data[23:24])[0]
+    co_2 = struct.unpack('<B', data[24:25])[0]
+    co_3 = struct.unpack('<B', data[25:26])[0]
+    co_4 = struct.unpack('<B', data[26:27])[0]
+
+    co = co_1 << 24 | co_2 << 16 | co_3 << 8 | co_4
     print("co", co)
-    ico = struct.unpack('<i', data[23:27])[0]
-    print("co raw", data[23:27])
-    print("ico", ico)
+    co = float(co)
+    print("fco", co)
 
     return {
         **protocol_1,
@@ -125,7 +130,8 @@ def get_transport_layer(data):
 
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
-    ID_protocol, Transport_Layer = (2, "TCP") # Aquí se debe hacer la consulta a la base de datos
+    # ID_protocol, Transport_Layer = (2, "TCP") # Aquí se debe hacer la consulta a la base de datos
+    ID_protocol, Transport_Layer =  # Aquí se debe hacer la consulta a la base de datos
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
     conn.sendall(coded_message.encode('utf-8'))
 
