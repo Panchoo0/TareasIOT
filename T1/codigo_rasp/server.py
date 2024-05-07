@@ -11,7 +11,7 @@ socketUDP = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 socketTCP.bind((HOST, PORT))
 socketUDP.bind((HOST, PORT_UDP))
 
-socketTCP.listen(3)
+socketTCP.listen()
 
 
 
@@ -34,10 +34,13 @@ socketTCP.listen(3)
 
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
+    print('Conectado por', addr)
+    print(conn)
+
     ID_protocol, Transport_Layer = (0, "TCP") # Aquí se debe hacer la consulta a la base de datos
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
     conn.sendall(coded_message.encode('utf-8'))
-    
+    print(Transport_Layer)
     if Transport_Layer == "TCP":
         data = conn.recv(1024)  # Recibe hasta 1024 bytes del cliente
         print("Recibido: ", data.decode('utf-8'))

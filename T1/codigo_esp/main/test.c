@@ -5,6 +5,7 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_system.h"
+#include "esp_sleep.h"
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -177,13 +178,14 @@ void socket_tcp(){
     // // Cerrar el socket
     // close(sock);
 
+    ESP_LOGI(TAG, "Esperando a recibir los datos\n");
     char rx_buffer[128];
     int rx_len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
     if (rx_len < 0) {
-        ESP_LOGE(TAG, "Error al recibir datos");
+        ESP_LOGE(TAG, "Error al recibir datos\n");
         return;
     }
-    ESP_LOGI(TAG, "Datos recibidos: %s", rx_buffer);
+    ESP_LOGI(TAG, "Datos recibidos: %s\n", rx_buffer);
 
     char *tokens = strtok(rx_buffer, ":");
 
@@ -193,16 +195,20 @@ void socket_tcp(){
 
     if (strcmp(Transport_Layer, "UDP") == 0){
         close(sock);
+        ESP_LOGI(TAG, "Protocolo UDP\n");
         return socket_udp();
     }
 
+    ESP_LOGI(TAG, "Protocolo TCP\n");
     // Enviar el paquete y luego entrar en modo deep sleep
     send(sock, "hola mundo", strlen("hola mundo"), 0);
     close(sock);
 
-    esp_deep_sleep_enable_timer_wakeup(60000000); // 10000000 us = 10 s
+    // esp_deep_sleep_enable_timer_wakeup(60000000); // 10000000 us = 10 s
 
-    esp_deep_sleep_start();
+    // esp_deep_sleep_start();
+
+    esp_deep_sleep(60000000);
 
 
 }
@@ -213,6 +219,5 @@ void app_main(void){
     nvs_init();
     wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
     ESP_LOGI(TAG,"Conectado a WiFi!\n");
-    // socket_tcp();
-    socket_udp();
+    socket_tcp();
 }
