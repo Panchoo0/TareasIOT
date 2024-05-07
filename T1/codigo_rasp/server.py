@@ -83,13 +83,13 @@ def parse_protocol_1(data):
 
 def parse_protocol_2(data):
     protocol_1 = parse_protocol_1(data)
-    temp = struct.unpack('<B', data[17:19])[0]
+    temp = struct.unpack('<B', data[17:18])[0]
     print("temp", temp)
-    press = struct.unpack('<i', data[19:23])[0]
+    press = struct.unpack('<i', data[18:22])[0]
     print("press", press)
-    hum = struct.unpack('<B', data[23:24])[0]
+    hum = struct.unpack('<B', data[22:23])[0]
     print("hum", hum)
-    co = struct.unpack('<f', data[24:28])[0]
+    co = struct.unpack('<f', data[23:27])[0]
     print("co", co)
 
     return {

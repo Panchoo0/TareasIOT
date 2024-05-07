@@ -1,4 +1,5 @@
 from peewee import Model, PostgresqlDatabase, DateTimeField, CharField, IntegerField
+from playhouse.postgres_ext import ArrayField
 
 # Configuración de la base de datos
 db_config = {
@@ -34,12 +35,12 @@ class Datos(BaseModel):
     press = CharField()
     hum = IntegerField()
     co = CharField()
-    # acc_x = 
-    # acc_y =
-    # acc_z =
-    # rgyr_x =
-    # rgyr_y =
-    # rgyr_z =
+    acc_x = ArrayField()
+    acc_y = ArrayField()
+    acc_z = ArrayField()
+    rgyr_x = ArrayField()
+    rgyr_y = ArrayField()
+    rgyr_z = ArrayField()
     # Extra
     ID_device = CharField()
     MAC = CharField()
@@ -62,9 +63,9 @@ class Configuracion(BaseModel):
     Transport_Layer = CharField()
 
     def set_protocol(self, new_ID):
-        # config = Configuracion.
-        self.ID_protocol = new_ID
-        self.save()
+        config = Configuracion.objects.filter(ID_protocol = self.ID_protocol)
+        config.ID_protocol = new_ID
+        config.save()
     
     def set_Transport_layer(self, new_Transport_layer):
         self.Transport_layer = new_Transport_layer
