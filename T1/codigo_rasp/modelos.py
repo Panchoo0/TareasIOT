@@ -1,5 +1,5 @@
 from peewee import Model, PostgresqlDatabase, DateTimeField, CharField, IntegerField, FloatField
-from playhouse.postgres_ext import ArrayField
+#from playhouse.postgres_ext import ArrayField
 
 # Configuración de la base de datos
 db_config = {
@@ -32,7 +32,7 @@ class Datos(BaseModel):
     Batt_level = IntegerField()
     timestamp = DateTimeField()
     temp = IntegerField()
-    press = CharField()
+    press = IntegerField()
     hum = IntegerField()
     co = FloatField()
     acc_x = ArrayField(FloatField)
