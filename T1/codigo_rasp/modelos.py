@@ -69,14 +69,16 @@ class Configuracion(BaseModel):
         return self.Transport_Layer
     
     def set_protocol(self, new_ID):
-        config = Configuracion.objects.filter(ID_protocol = self.ID_protocol)
-        config[0].ID_protocol = new_ID
+        config = Configuracion.get_by_id(1)
+        config.ID_protocol = new_ID
         config.save()
     
     def set_Transport_layer(self, new_Transport_layer):
-        config = Configuracion.objects.filter(Transport_layer = self.ID_protocol)
-        config[0].Transport_layer = new_Transport_layer
+        config = Configuracion.get_by_id(1)
+        config.Transport_layer = new_Transport_layer
         config.save()
+
+    
         
         
 # Configuracion.get_by_id(1).set_protocol(2)
