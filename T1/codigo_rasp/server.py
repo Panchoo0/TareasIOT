@@ -212,7 +212,7 @@ def main():
     # print('id y layer 2: ',ID_protocol2)
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
     conn.sendall(coded_message.encode('utf-8'))
-    max_data = 1024 * 1024 * 100
+    max_data = 1024 * 1024 * 1000
 
     if Transport_Layer == "TCP":
         data = conn.recv(max_data)  # Recibe hasta 1024 bytes del cliente
