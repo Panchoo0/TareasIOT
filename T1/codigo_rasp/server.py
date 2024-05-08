@@ -51,7 +51,7 @@ def parse_headers(data):
     Transport_layer = struct.unpack('<c', data[8:9])[0]
     ID_Protocol = struct.unpack('<c', data[9:10])[0]
 
-    msg_len = struct.unpack('<H', data[10:12])[0]
+    msg_len = struct.unpack('>H', data[10:12])[0]
 
     return {
         'id': id,
@@ -215,7 +215,7 @@ def main():
     max_data = 1024 * 1024 * 1000
 
     if Transport_Layer == "TCP":
-        data = conn.recv(max_data)  # Recibe hasta 1024 bytes del cliente
+        data = conn.recv(1024 * 1024 * 1000)  # Recibe hasta 1024 bytes del cliente
         # print("Recibido: ", data)
         data = parse_data(data)
         conn.close()
