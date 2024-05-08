@@ -160,6 +160,8 @@ def parse_protocol_3(data):
 def parse_protocol_4(data):
     parse_data = parse_protocol_2(data)
     print("Se parseo protocolo 2")
+    print(len(data))
+    print(len(data[27:27 + 8000]))
     acc_x = struct.unpack('>f', data[27:27 + 8000])[0]
     # acc_y = struct.unpack('>f', data[27 + 8000:2*8000 + 27])[0]
     # acc_z = struct.unpack('>f', data[27 + 2*8000:3*8000 + 27])[0]
