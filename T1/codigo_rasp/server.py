@@ -212,15 +212,16 @@ def main():
     # print('id y layer 2: ',ID_protocol2)
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
     conn.sendall(coded_message.encode('utf-8'))
+    max_data = 1024 * 1024 * 100
 
     if Transport_Layer == "TCP":
-        data = conn.recv(1024)  # Recibe hasta 1024 bytes del cliente
+        data = conn.recv(max_data)  # Recibe hasta 1024 bytes del cliente
         # print("Recibido: ", data)
         data = parse_data(data)
         conn.close()
 
     elif Transport_Layer == "UDP":
-        data, addr = socketUDP.recvfrom(1024)
+        data, addr = socketUDP.recvfrom(max_data)
         print("Recibido: ", data)
 
 while True:
