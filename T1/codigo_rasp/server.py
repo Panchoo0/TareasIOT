@@ -158,6 +158,25 @@ def parse_protocol_3(data):
 
 def parse_protocol_4(data):
     parse_data = parse_protocol_2(data)
+    
+    acc_x = struct.unpack('>f', data[27:27 + 8000])[0]
+    acc_y = struct.unpack('>f', data[27 + 8000:2*8000 + 27])[0]
+    acc_z = struct.unpack('>f', data[27 + 2*8000:3*8000 + 27])[0]
+    rgyr_x = struct.unpack('>f', data[27 + 3*8000:4*8000 + 27])[0]
+    rgyr_y = struct.unpack('>f', data[27 + 4*8000:5*8000 + 27])[0]
+    rgyr_z = struct.unpack('>f', data[27 + 5*8000:6*8000 + 27])[0]
+
+    print("acc_x", acc_x[:27])
+
+    return {
+        **parse_data,
+        'acc_x': acc_x,
+        'acc_y': acc_y,
+        'acc_z': acc_z,
+        'rgyr_x': rgyr_x,
+        'rgyr_y': rgyr_y,
+        'rgyr_z': rgyr_z
+    }
 
 
 def parse_data(data):
@@ -185,7 +204,7 @@ def get_transport_layer(data):
 
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
-    ID_protocol, Transport_Layer = (3, "TCP") # Aquí se debe hacer la consulta a la base de datos
+    ID_protocol, Transport_Layer = (4, "TCP") # Aquí se debe hacer la consulta a la base de datos
     # ID_protocol2 = Configuracion.get_by_id(1)# Aquí se debe hacer la consulta a la base de datos
     # print('id y layer 2: ',ID_protocol2)
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
@@ -193,8 +212,8 @@ def main():
 
     if Transport_Layer == "TCP":
         data = conn.recv(1024)  # Recibe hasta 1024 bytes del cliente
-        print("Recibido: ", data)
-        print(parse_data(data))
+        # print("Recibido: ", data)
+        data = parse_data(data)
         conn.close()
 
     elif Transport_Layer == "UDP":

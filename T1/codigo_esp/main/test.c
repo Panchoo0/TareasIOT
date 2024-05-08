@@ -351,6 +351,14 @@ void set_protocol_3(char *message,  char* ID_protocol, char* Transport_Layer){
 
 }
 
+void print_first_20(int *data){
+    for (int i = 0; i < 20; i++){
+        float num = *((float*)&data[i]);
+        printf("%f ", num);
+    }
+    printf("\n");
+}
+
 void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
     set_headers(message, ID_protocol, Transport_Layer);
     set_protocol_2(message, ID_protocol, Transport_Layer);
@@ -366,6 +374,8 @@ void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
     acc(acc_y);
     acc(acc_z);
 
+    print_first_20(acc_x);
+
     int gyro_x[2000];
     int gyro_y[2000];
     int gyro_z[2000];
@@ -374,27 +384,27 @@ void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
     rgyro(gyro_z);
 
     for (int i = 0; i < 2000; i++) {
-        message[27 + i] = (char) (acc_x[i] >> 24 & 0xFF);
+        message[27 + i * 4] = (char) (acc_x[i] >> 24 & 0xFF);
         message[27 + (i + 1) * 4] = (char) (acc_x[i] >> 16 & 0xFF);
         message[27 + (i + 2) * 4] = (char) (acc_x[i] >> 8 & 0xFF);
         message[27 + (i + 3) * 4] = (char) (acc_x[i] & 0xFF);
 
-        message[27 + 8000 + i] = (char) (acc_y[i] >> 24 & 0xFF);
+        message[27 + 8000 + i * 4] = (char) (acc_y[i] >> 24 & 0xFF);
         message[27 + 8000 + (i + 1) * 4] = (char) (acc_y[i] >> 16 & 0xFF);
         message[27 + 8000 + (i + 2) * 4] = (char) (acc_y[i] >> 8 & 0xFF);
         message[27 + 8000 + (i + 3) * 4] = (char) (acc_y[i] & 0xFF);
 
-        message[27 + 16000 + i] = (char) (acc_z[i] >> 24 & 0xFF);
+        message[27 + 16000 + i * 4] = (char) (acc_z[i] >> 24 & 0xFF);
         message[27 + 16000 + (i + 1) * 4] = (char) (acc_z[i] >> 16 & 0xFF);
         message[27 + 16000 + (i + 2) * 4] = (char) (acc_z[i] >> 8 & 0xFF);
         message[27 + 16000 + (i + 3) * 4] = (char) (acc_z[i] & 0xFF);
 
-        message[27 + 24000 + i] = (char) (gyro_x[i] >> 24 & 0xFF);
+        message[27 + 24000 + i * 4] = (char) (gyro_x[i] >> 24 & 0xFF);
         message[27 + 24000 + (i + 1) * 4] = (char) (gyro_x[i] >> 16 & 0xFF);
         message[27 + 24000 + (i + 2) * 4] = (char) (gyro_x[i] >> 8 & 0xFF);
         message[27 + 24000 + (i + 3) * 4] = (char) (gyro_x[i] & 0xFF);
 
-        message[27 + 32000 + i] = (char) (gyro_y[i] >> 24 & 0xFF);
+        message[27 + 32000 + i * 4] = (char) (gyro_y[i] >> 24 & 0xFF);
         message[27 + 32000 + (i + 1) * 4] = (char) (gyro_y[i] >> 16 & 0xFF);
         message[27 + 32000 + (i + 2) * 4] = (char) (gyro_y[i] >> 8 & 0xFF);
         message[27 + 32000 + (i + 3) * 4] = (char) (gyro_y[i] & 0xFF);
