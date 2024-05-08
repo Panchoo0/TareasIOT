@@ -109,7 +109,8 @@ def parse_protocol_2(data):
     print("temp", temp)
     press = parse_int(data[18:22])
     print("press", press)
-    
+    print("press 2", struct.unpack('>i', data[18:22])[0])
+
     hum = struct.unpack('<B', data[22:23])[0]
     print("hum", hum)
     
@@ -132,6 +133,14 @@ def parse_protocol_3(data):
     freqy = parse_float(data[43:47])
     ampz = parse_float(data[47:51])
     freqz = parse_float(data[51:55])
+
+    print("rms", rms)
+    print("ampx", ampx)
+    print("freqx", freqx)
+    print("ampy", ampy)
+    print("freqy", freqy)
+    print("ampz", ampz)
+    print("freqz", freqz)
     
 
     return {
@@ -145,6 +154,10 @@ def parse_protocol_3(data):
         'freqz': freqz
     }
 
+def parse_protocol_4(data):
+    parse_data = parse_protocol_2(data)
+
+
 def parse_data(data):
     protocol = struct.unpack('<c', data[9:10])[0]
     if protocol == b'\x00':
@@ -155,7 +168,9 @@ def parse_data(data):
         return parse_protocol_2(data)
     elif protocol == b'\x03':
         return parse_protocol_3(data)
-
+    elif protocol == b'\x04':
+        return parse_protocol_4(data)
+    
 
 def add_data(data):
 
