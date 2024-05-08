@@ -115,6 +115,7 @@ def parse_protocol_2(data):
     print("hum", hum)
     
     co = parse_float(data[23:27])
+    print("co", co)
 
     return {
         **protocol_1,
@@ -158,24 +159,24 @@ def parse_protocol_3(data):
 
 def parse_protocol_4(data):
     parse_data = parse_protocol_2(data)
-    
+    print("Se parseo protocolo 2")
     acc_x = struct.unpack('>f', data[27:27 + 8000])[0]
-    acc_y = struct.unpack('>f', data[27 + 8000:2*8000 + 27])[0]
-    acc_z = struct.unpack('>f', data[27 + 2*8000:3*8000 + 27])[0]
-    rgyr_x = struct.unpack('>f', data[27 + 3*8000:4*8000 + 27])[0]
-    rgyr_y = struct.unpack('>f', data[27 + 4*8000:5*8000 + 27])[0]
-    rgyr_z = struct.unpack('>f', data[27 + 5*8000:6*8000 + 27])[0]
+    # acc_y = struct.unpack('>f', data[27 + 8000:2*8000 + 27])[0]
+    # acc_z = struct.unpack('>f', data[27 + 2*8000:3*8000 + 27])[0]
+    # rgyr_x = struct.unpack('>f', data[27 + 3*8000:4*8000 + 27])[0]
+    # rgyr_y = struct.unpack('>f', data[27 + 4*8000:5*8000 + 27])[0]
+    # rgyr_z = struct.unpack('>f', data[27 + 5*8000:6*8000 + 27])[0]
 
     print("acc_x", acc_x[:27])
 
     return {
         **parse_data,
         'acc_x': acc_x,
-        'acc_y': acc_y,
-        'acc_z': acc_z,
-        'rgyr_x': rgyr_x,
-        'rgyr_y': rgyr_y,
-        'rgyr_z': rgyr_z
+        # 'acc_y': acc_y,
+        # 'acc_z': acc_z,
+        # 'rgyr_x': rgyr_x,
+        # 'rgyr_y': rgyr_y,
+        # 'rgyr_z': rgyr_z
     }
 
 

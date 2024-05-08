@@ -367,18 +367,20 @@ void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
     message[10] = (char) (size >> 16 & 0xFF); // Tamaño del mensaje
     message[11] = (char) (size & 0xFF); // Tamano del mensaje
 
-    int acc_x[2000];
-    int acc_y[2000];
-    int acc_z[2000];
+    int *acc_x = malloc(2000 * sizeof(int));
+    int *acc_y = malloc(2000 * sizeof(int));
+    int *acc_z = malloc(2000 * sizeof(int));
+
     acc(acc_x);
     acc(acc_y);
     acc(acc_z);
 
     print_first_20(acc_x);
 
-    int gyro_x[2000];
-    int gyro_y[2000];
-    int gyro_z[2000];
+    int *gyro_x = malloc(2000 * sizeof(int));
+    int *gyro_y = malloc(2000 * sizeof(int));
+    int *gyro_z = malloc(2000 * sizeof(int));
+
     rgyro(gyro_x);
     rgyro(gyro_y);
     rgyro(gyro_z);
@@ -408,8 +410,15 @@ void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
         message[27 + 32000 + (i + 1) * 4] = (char) (gyro_y[i] >> 16 & 0xFF);
         message[27 + 32000 + (i + 2) * 4] = (char) (gyro_y[i] >> 8 & 0xFF);
         message[27 + 32000 + (i + 3) * 4] = (char) (gyro_y[i] & 0xFF);
-
     }
+
+    free(acc_x);
+    free(acc_y);
+    free(acc_z);
+    free(gyro_x);
+    free(gyro_y);
+    free(gyro_z);
+
 }
 
 int get_procotol_length(char *ID_protocol){
@@ -442,7 +451,9 @@ char *set_message(char* ID_protocol, char* Transport_Layer){
         message = (char *) malloc(55 * sizeof(char));
         set_protocol_3(message, ID_protocol, Transport_Layer);
     } else if (strcmp(ID_protocol, "4") == 0){
+        printf("Protocolo 4\n");
         message = (char *) malloc(48027 * sizeof(char));
+        printf("Creado arreglo \n");
         set_protocol_4(message, ID_protocol, Transport_Layer);
     }
 
