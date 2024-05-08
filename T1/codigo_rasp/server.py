@@ -135,12 +135,14 @@ def parse_protocol_3(data):
     freqz = parse_float(data[51:55])
 
     print("rms", rms)
+    print("rms 2", struct.unpack('>f', data[27:31])[0])
     print("ampx", ampx)
     print("freqx", freqx)
     print("ampy", ampy)
     print("freqy", freqy)
     print("ampz", ampz)
     print("freqz", freqz)
+    print("ampx as int", struct.unpack('>i', data[31:35])[0])
     
 
     return {

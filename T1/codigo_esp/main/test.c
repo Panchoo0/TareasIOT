@@ -309,6 +309,8 @@ void set_protocol_3(char *message,  char* ID_protocol, char* Transport_Layer){
     float frms = rms(fampx, fampy, fampz);
     int rms = *((int*)&frms);
 
+    printf("fampx as int: %d\n", ampx);
+
     printf("RMS: %f\n", frms);
 
     message[27] = (char) (rms >> 24 & 0xFF);
