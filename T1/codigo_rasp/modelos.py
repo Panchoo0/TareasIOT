@@ -29,19 +29,19 @@ class Datos(BaseModel):
     Length = IntegerField()
     # All data
     Batt_level = IntegerField()
-    timestamp_sent = DateTimeField()
-    timestamp_rcv = DateTimeField()
-    temp = IntegerField()
-    press = IntegerField()
-    hum = IntegerField()
-    co = FloatField()
-    RMS = FloatField()  
-    Amp_x = FloatField()
-    Frec_x = FloatField()
-    Amp_y = FloatField()
-    Frec_y = FloatField()
-    Amp_z = FloatField()
-    Frec_z = FloatField()
+    timestamp_sent = DateTimeField(null=True)
+    timestamp_rcv = DateTimeField(null=True)
+    temp = IntegerField(null=True)
+    press = IntegerField(null=True)
+    hum = IntegerField(null=True)
+    co = FloatField(null=True)
+    RMS = FloatField(null=True)
+    Amp_x = FloatField(null=True)
+    Frec_x = FloatField(null=True)
+    Amp_y = FloatField(null=True)
+    Frec_y = FloatField(null=True)
+    Amp_z = FloatField(null=True)
+    Frec_z = FloatField(null=True)
     # """ acc_x = ArrayField(FloatField)
     # acc_y = ArrayField(FloatField)
     # acc_z = ArrayField(FloatField)
@@ -49,8 +49,8 @@ class Datos(BaseModel):
     # rgyr_y = ArrayField(FloatField)
     # rgyr_z = ArrayField(FloatField) """
     # Extra
-    ID_device = CharField()
-    MAC = CharField()
+    ID_device = CharField(null=True)
+    MAC = CharField(null=True)
     
 
 
@@ -105,4 +105,4 @@ def create_tables():
         db.create_tables([Datos, Logs, Configuracion, Loss])
         Configuracion.create(ID_protocol='0', Transport_Layer='TCP')
 
-# create_tables()
+create_tables()
