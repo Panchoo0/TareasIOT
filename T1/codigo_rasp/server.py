@@ -255,7 +255,9 @@ def main():
         print("Recibido: ", data)
         data = parse_data(data)
         if PRESSED_KEY == "t":
+            socketUDP.settimeout(3)
             socketUDP.sendto("TCP".encode('utf-8'), addr)
+            socketUDP.settimeout(None)
 
     conn.close()
 
