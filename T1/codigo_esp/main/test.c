@@ -482,12 +482,21 @@ void socket_udp(char *ID_protocol,char *Transport_Layer){
 
     ESP_LOGI(TAG, "Largo %d\n", size);
 
+    struct timeval timeout;      
+    timeout.tv_sec = 3;
+    timeout.tv_usec = 0;
+
+    setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
+    setsockopt (sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof timeout);
+
     while (1) {
+        
         int r = sendto(sock, message, size, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
         ESP_LOGI(TAG, "Se enviaron los datos");
 
         char rx_buffer[128];
         int rx_len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, NULL, NULL);
+        ESP_LOGI(TAG, "Datos recibidos: %s\n", rx_buffer);
         if (rx_len < 0) {
             continue;
         } else if (strcmp(rx_buffer, "TCP") == 0) {
@@ -530,7 +539,7 @@ void socket_tcp(){
         return;
     }
     ESP_LOGI(TAG, "Datos recibidos: %s\n", rx_buffer);
-
+    rx_buffer[rx_len] = 0;
     char *tokens = strtok(rx_buffer, ":");
 
     char *ID_protocol = tokens;
