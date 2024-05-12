@@ -29,6 +29,13 @@ def on_press(key):
     if k in ['0', '1', '2', '3', '4', 't', 'u']:  # keys of interest
         print('Key pressed: ' + k)
         PRESSED_KEY = k
+        if k == 't':
+            Configuracion.set_Transport_layer("TCP")
+        elif k == 'u':
+            Configuracion.set_protocol("UDP")
+        else:
+            Configuracion.set_protocol(k)
+        
 
 
 listener = keyboard.Listener(on_press=on_press)
@@ -229,7 +236,9 @@ def get_transport_layer(data):
 
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
-    ID_protocol, Transport_Layer = (4, "TCP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
+    ID_protocol = Configuracion.get_by_id(1).get_ID_protocol()
+    Transport_Layer = Configuracion.get_by_id(1).get_Transport_layer()
+    # ID_protocol, Transport_Layer = (3, "UDP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
     # ID_protocol2 = Configuracion.get_by_id(1)# Aquí se debe hacer la consulta a la base de datos
     # print('id y layer 2: ',ID_protocol2)
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
@@ -258,6 +267,7 @@ while True:
     except Exception as e:
         print(e)
     except KeyboardInterrupt:
+        print("Cerrando el servidor...")
         break
 
 socketTCP.close()

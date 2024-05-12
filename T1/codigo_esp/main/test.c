@@ -387,29 +387,29 @@ void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
 
     for (int i = 0; i < 2000; i++) {
         message[27 + i * 4] = (char) (acc_x[i] >> 24 & 0xFF);
-        message[27 + (i + 1) * 4] = (char) (acc_x[i] >> 16 & 0xFF);
-        message[27 + (i + 2) * 4] = (char) (acc_x[i] >> 8 & 0xFF);
-        message[27 + (i + 3) * 4] = (char) (acc_x[i] & 0xFF);
+        message[27 + i * 4 + 1] = (char) (acc_x[i] >> 16 & 0xFF);
+        message[27 + i * 4 + 2] = (char) (acc_x[i] >> 8 & 0xFF);
+        message[27 + i * 4 + 3] = (char) (acc_x[i] & 0xFF);
 
         message[27 + 8000 + i * 4] = (char) (acc_y[i] >> 24 & 0xFF);
-        message[27 + 8000 + (i + 1) * 4] = (char) (acc_y[i] >> 16 & 0xFF);
-        message[27 + 8000 + (i + 2) * 4] = (char) (acc_y[i] >> 8 & 0xFF);
-        message[27 + 8000 + (i + 3) * 4] = (char) (acc_y[i] & 0xFF);
+        message[27 + 8000 + i * 4 + 1] = (char) (acc_y[i] >> 16 & 0xFF);
+        message[27 + 8000 + i * 4 + 2] = (char) (acc_y[i] >> 8 & 0xFF);
+        message[27 + 8000 + i * 4 + 3] = (char) (acc_y[i] & 0xFF);
 
         message[27 + 16000 + i * 4] = (char) (acc_z[i] >> 24 & 0xFF);
-        message[27 + 16000 + (i + 1) * 4] = (char) (acc_z[i] >> 16 & 0xFF);
-        message[27 + 16000 + (i + 2) * 4] = (char) (acc_z[i] >> 8 & 0xFF);
-        message[27 + 16000 + (i + 3) * 4] = (char) (acc_z[i] & 0xFF);
+        message[27 + 16000 + i * 4 + 1] = (char) (acc_z[i] >> 16 & 0xFF);
+        message[27 + 16000 + i * 4 + 2] = (char) (acc_z[i] >> 8 & 0xFF);
+        message[27 + 16000 + i * 4 + 3] = (char) (acc_z[i] & 0xFF);
 
         message[27 + 24000 + i * 4] = (char) (gyro_x[i] >> 24 & 0xFF);
-        message[27 + 24000 + (i + 1) * 4] = (char) (gyro_x[i] >> 16 & 0xFF);
-        message[27 + 24000 + (i + 2) * 4] = (char) (gyro_x[i] >> 8 & 0xFF);
-        message[27 + 24000 + (i + 3) * 4] = (char) (gyro_x[i] & 0xFF);
+        message[27 + 24000 + i * 4 + 1] = (char) (gyro_x[i] >> 16 & 0xFF);
+        message[27 + 24000 + i * 4 + 2] = (char) (gyro_x[i] >> 8 & 0xFF);
+        message[27 + 24000 + i * 4 + 3] = (char) (gyro_x[i] & 0xFF);
 
         message[27 + 32000 + i * 4] = (char) (gyro_y[i] >> 24 & 0xFF);
-        message[27 + 32000 + (i + 1) * 4] = (char) (gyro_y[i] >> 16 & 0xFF);
-        message[27 + 32000 + (i + 2) * 4] = (char) (gyro_y[i] >> 8 & 0xFF);
-        message[27 + 32000 + (i + 3) * 4] = (char) (gyro_y[i] & 0xFF);
+        message[27 + 32000 + i * 4 + 1] = (char) (gyro_y[i] >> 16 & 0xFF);
+        message[27 + 32000 + i * 4 + 2] = (char) (gyro_y[i] >> 8 & 0xFF);
+        message[27 + 32000 + i * 4 + 3] = (char) (gyro_y[i] & 0xFF);
     }
 
     free(acc_x);
@@ -460,7 +460,7 @@ char *set_message(char* ID_protocol, char* Transport_Layer){
     return message;
 }
 
-void socket_udp(char *ID_protocol,int *Transport_Layer){
+void socket_udp(char *ID_protocol,char *Transport_Layer){
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_UDP_PORT);
