@@ -235,7 +235,7 @@ def parse_data(data):
             ID_protocol = parse_data['ID_Protocol'] if 'ID_Protocol' in parse_data else None,
             Length = parse_data['msg_len'] if 'msg_len' in parse_data else None,
             Batt_level = parse_data['batt_lvl'] if 'batt_lvl' in parse_data else None,
-            timestamp = parse_data['timestamp'] if 'timestamp' in parse_data else None,
+            timestamp_sent = parse_data['timestamp'] if 'timestamp' in parse_data else None,
             temp = parse_data['temp'] if 'temp' in parse_data else None,
             press = parse_data['press'] if 'press' in parse_data else None,
             hum = parse_data['hum'] if 'hum' in parse_data else None,
@@ -251,7 +251,9 @@ def parse_data(data):
 
             ID_device = parse_data['id'] if 'id' in parse_data else None,
             MAC = parse_data['mac'] if 'mac' in parse_data else None,
-            timestamp = parse_data['timestamp'] if 'timestamp' in parse_data else None,
+
+            timestamp_rcv=parse_data['timestamp'] if 'timestamp' in parse_data else None,
+
         )
         
     except Exception as e:

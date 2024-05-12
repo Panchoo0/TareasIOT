@@ -24,13 +24,13 @@ class BaseModel(Model):
 class Datos(BaseModel):
     # Headers
     ID_message = CharField()
-    MAC_device = CharField()
     Transport_layer = CharField()
     ID_protocol = IntegerField()
     Length = IntegerField()
     # All data
     Batt_level = IntegerField()
-    timestamp = DateTimeField()
+    timestamp_sent = DateTimeField()
+    timestamp_rcv = DateTimeField()
     temp = IntegerField()
     press = IntegerField()
     hum = IntegerField()
@@ -51,7 +51,6 @@ class Datos(BaseModel):
     # Extra
     ID_device = CharField()
     MAC = CharField()
-    timestamp = DateTimeField()
     
 
 
@@ -106,4 +105,4 @@ def create_tables():
         db.create_tables([Datos, Logs, Configuracion, Loss])
         Configuracion.create(ID_protocol='0', Transport_Layer='TCP')
 
-# create_tables()
+create_tables()
