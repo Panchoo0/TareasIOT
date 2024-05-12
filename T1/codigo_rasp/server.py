@@ -1,3 +1,4 @@
+import threading
 import multiprocessing
 import socket
 import struct
@@ -235,72 +236,61 @@ def get_transport_layer(data):
     return
 
 
-import multiprocessing
+import threading
+
+def udp_conn():
+    while True:
+        print("UDP esperando datos...")
+        data, addr = socketUDP.recvfrom(MAX_SIZE)
+        print("Recibido (UDP): ", data)
+        data = parse_data(data)
+
+        if PRESSED_KEY == "t":
+            socketUDP.settimeout(3)
+            print("Enviando cambio a TCP a", addr)
+            socketUDP.sendto("TCP\0".encode('utf-8'), addr)
+            socketUDP.settimeout(None)
 
 
-def udp_conn(result_queue):
-    print("UDP esperando datos...")
-    data, addr = socketUDP.recvfrom(MAX_SIZE)
-    print("Recibido (UDP): ", data)
-    data = parse_data(data)
+def tcp_server():
+    while True:
+        conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
+        ID_protocol = Configuracion.get_by_id(1).get_ID_protocol()
+        Transport_Layer = Configuracion.get_by_id(1).get_Transport_layer()
+        # ID_protocol, Transport_Layer = (3, "UDP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
+        # Se le envia al microcontrolador el protocolo y el tipo de transporte
+        coded_message = f"{ID_protocol}:{Transport_Layer}"
+        print("Enviado: ", coded_message)
+        conn.sendall(coded_message.encode('utf-8'))
 
-    if PRESSED_KEY == "t":
-        socketUDP.settimeout(3)
-        print("Enviando cambio a TCP a", addr)
-        socketUDP.sendto("TCP\0".encode('utf-8'), addr)
-        socketUDP.settimeout(None)
-
-    result_queue.put(data)
-
-
-def tcp_conn(conn, result_queue):
-    print("TCP esperando datos...")
-    data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
-    print("Recibido (TCP): ", data)
-    data = parse_data(data)
-
-    result_queue.put(data)
+        if Transport_Layer == "UDP":
+            conn.close()
+            return
+        
+        print("TCP esperando datos...")
+        data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
+        print("Recibido (TCP): ", data)
+        data = parse_data(data)
+        conn.close()
 
 
 def main():
-    conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
-    ID_protocol = Configuracion.get_by_id(1).get_ID_protocol()
-    Transport_Layer = Configuracion.get_by_id(1).get_Transport_layer()
-    # ID_protocol, Transport_Layer = (3, "UDP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
-    coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
-
-    conn.sendall(coded_message.encode('utf-8'))
-    print("Enviado: ", coded_message)
-
-    result_queue = multiprocessing.Queue()
-
-    tcp_process = multiprocessing.Process(target=tcp_conn, args=(conn, result_queue))
-    udp_process = multiprocessing.Process(target=udp_conn, args=(result_queue,))
-
-    tcp_process.start()
-    udp_process.start()
-
-    result = result_queue.get()
-    print("Result", result)
-
-    tcp_process.terminate()
-    udp_process.terminate()    
-  
-
-
-    conn.close()
+    t1 = threading.Thread(target=tcp_server)
+    t2 = threading.Thread(target=udp_conn)
+    t1.start()
+    t2.start()
+    
 
 
 
 
-while True:
-    try:
-        main()
-    except Exception as e:
-        print(e)
-    except KeyboardInterrupt:
-        print("Cerrando el servidor...")
-        break
+
+try:
+    main()
+except Exception as e:
+    print(e)
+except KeyboardInterrupt:
+    print("Cerrando el servidor...")
 
 socketTCP.close()
 socketUDP.close()
