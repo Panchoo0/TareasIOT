@@ -560,7 +560,7 @@ void socket_tcp(){
     // esp_deep_sleep_enable_timer_wakeup(60000000); // 10000000 us = 10 s
 
     // esp_deep_sleep_start();
-    esp_deep_sleep(60000000);
+    esp_deep_sleep(10000000);
 
 
 }

@@ -32,7 +32,7 @@ def on_press(key):
         if k == 't':
             Configuracion.set_Transport_layer("TCP")
         elif k == 'u':
-            Configuracion.set_protocol("UDP")
+            Configuracion.set_Transport_layer("UDP")
         else:
             Configuracion.set_protocol(k)
         
