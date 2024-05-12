@@ -4,7 +4,7 @@ import socket
 import struct
 from pynput.mouse import Button, Controller
 from pynput import keyboard
-from modelos import db, Configuracion
+from modelos import db, Configuracion, Datos
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
 PORT_UDP = 1235
@@ -215,17 +215,48 @@ def parse_protocol_4(data):
 
 
 def parse_data(data):
-    protocol = struct.unpack('<c', data[9:10])[0]
-    if protocol == b'\x00':
-        return parse_protocol_0(data)
-    elif protocol == b'\x01':
-        return parse_protocol_1(data)
-    elif protocol == b'\x02':
-        return parse_protocol_2(data)
-    elif protocol == b'\x03':
-        return parse_protocol_3(data)
-    elif protocol == b'\x04':
-        return parse_protocol_4(data)
+    try:
+        protocol = struct.unpack('<c', data[9:10])[0]
+        if protocol == b'\x00':
+            parse_data = parse_protocol_0(data)
+        elif protocol == b'\x01':
+            parse_data = parse_protocol_1(data)
+        elif protocol == b'\x02':
+            parse_data = parse_protocol_2(data)
+        elif protocol == b'\x03':
+            parse_data = parse_protocol_3(data)
+        elif protocol == b'\x04':
+            parse_data = parse_protocol_4(data)
+
+        Datos.create(
+            ID_message = parse_data['id'] if 'id' in parse_data else None,
+            MAC_device = parse_data['mac'] if 'mac' in parse_data else None,
+            Transport_layer = parse_data['Transport_layer'] if 'Transport_layer' in parse_data else None,
+            ID_protocol = parse_data['ID_Protocol'] if 'ID_Protocol' in parse_data else None,
+            Length = parse_data['msg_len'] if 'msg_len' in parse_data else None,
+            Batt_level = parse_data['batt_lvl'] if 'batt_lvl' in parse_data else None,
+            timestamp = parse_data['timestamp'] if 'timestamp' in parse_data else None,
+            temp = parse_data['temp'] if 'temp' in parse_data else None,
+            press = parse_data['press'] if 'press' in parse_data else None,
+            hum = parse_data['hum'] if 'hum' in parse_data else None,
+            co = parse_data['co'] if 'co' in parse_data else None,
+
+            RMS = parse_data['rms'] if 'rms' in parse_data else None,
+            Amp_x = parse_data['ampx'] if 'ampx' in parse_data else None,
+            Frec_x = parse_data['freqx'] if 'freqx' in parse_data else None,
+            Amp_y = parse_data['ampy'] if 'ampy' in parse_data else None,
+            Frec_y = parse_data['freqy'] if 'freqy' in parse_data else None,
+            Amp_z = parse_data['ampz'] if 'ampz' in parse_data else None,
+            Frec_z = parse_data['freqz'] if 'freqz' in parse_data else None,
+
+            ID_device = parse_data['id'] if 'id' in parse_data else None,
+            MAC = parse_data['mac'] if 'mac' in parse_data else None,
+            timestamp = parse_data['timestamp'] if 'timestamp' in parse_data else None,
+        )
+        
+    except Exception as e:
+        print(e)
+        return None
     
 
 def add_data(data):
@@ -243,7 +274,7 @@ def udp_conn():
         print("UDP esperando datos...")
         data, addr = socketUDP.recvfrom(MAX_SIZE)
         print("Recibido (UDP): ", data)
-        data = parse_data(data)
+        parse_data(data)
 
         if PRESSED_KEY == "t":
             socketUDP.settimeout(3)
@@ -274,7 +305,7 @@ def tcp_server():
         print("TCP esperando datos...")
         data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
         print("Recibido (TCP): ", data)
-        data = parse_data(data)
+        parse_data(data)
         conn.close()
 
 
