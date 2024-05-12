@@ -1,3 +1,4 @@
+import multiprocessing
 import socket
 import struct
 from pynput.mouse import Button, Controller
@@ -234,31 +235,53 @@ def get_transport_layer(data):
     return
 
 
+import multiprocessing
+
+
+def udp_conn(result_queue):
+    print("UDP esperando datos...")
+    data, addr = socketUDP.recvfrom(MAX_SIZE)
+    print("Recibido: ", data)
+    data = parse_data(data)
+    if PRESSED_KEY == "t":
+        socketUDP.settimeout(3)
+        print("Enviando cambio a TCP a", addr)
+        socketUDP.sendto("TCP\0".encode('utf-8'), addr)
+        socketUDP.settimeout(None)
+
+
+def tcp_conn(conn, result_queue):
+    print("TCP esperando datos...")
+    data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
+    # print("Recibido: ", data)
+    data = parse_data(data)
+
+
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
     ID_protocol = Configuracion.get_by_id(1).get_ID_protocol()
     Transport_Layer = Configuracion.get_by_id(1).get_Transport_layer()
     # ID_protocol, Transport_Layer = (3, "UDP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
-    # ID_protocol2 = Configuracion.get_by_id(1)# Aquí se debe hacer la consulta a la base de datos
-    # print('id y layer 2: ',ID_protocol2)
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
+
     conn.sendall(coded_message.encode('utf-8'))
     print("Enviado: ", coded_message)
 
-    if Transport_Layer == "TCP":
-        data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
-        # print("Recibido: ", data)
-        data = parse_data(data)
+    result_queue = multiprocessing.Queue()
 
-    elif Transport_Layer == "UDP":
-        socketUDP.settimeout(3)
-        data, addr = socketUDP.recvfrom(MAX_SIZE)
-        print("Recibido: ", data)
-        data = parse_data(data)
-        if PRESSED_KEY == "t":
-            print("Enviando cambio a TCP a", addr)
-            socketUDP.sendto("TCP\0".encode('utf-8'), addr)
-            socketUDP.settimeout(None)
+    tcp_process = multiprocessing.Process(target=tcp_conn, args=(conn, result_queue))
+    udp_process = multiprocessing.Process(target=udp_conn, args=(result_queue,))
+
+    tcp_process.start()
+    udp_process.start()
+
+    result = result_queue.get()
+    print("Result", result)
+
+    tcp_process.terminate()
+    udp_process.terminate()    
+  
+
 
     conn.close()
 
