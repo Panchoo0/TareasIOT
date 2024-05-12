@@ -545,12 +545,14 @@ void socket_tcp(){
 
     ESP_LOGI(TAG, "Protocolo TCP\n");
     ESP_LOGI(TAG, "Protocolo %s\n", ID_protocol);
+
+
     char *message = set_message(ID_protocol, Transport_Layer);
     int size = get_procotol_length(ID_protocol);
 
     ESP_LOGI(TAG, "Largo %d\n", size);
-
     int r = send(sock, message, size, 0);
+    
     ESP_LOGI(TAG, "Se envió %d bytes\n", r);
     ESP_LOGI(TAG, "Se enviaron los datos\n");
     free(message);
