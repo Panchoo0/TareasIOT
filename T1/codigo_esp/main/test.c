@@ -460,7 +460,7 @@ char *set_message(char* ID_protocol, char* Transport_Layer){
     return message;
 }
 
-void socket_udp(char *ID_protocol,char *Transport_Layer){
+int udp_conn(char *ID_protocol,char *Transport_Layer) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_UDP_PORT);
@@ -470,7 +470,7 @@ void socket_udp(char *ID_protocol,char *Transport_Layer){
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock < 0) {
         ESP_LOGE(TAG, "Error al crear el socket");
-        return;
+        return 0;
     }
 
     // Enviar mensaje continuamente hasta que se cambie el protocolo
@@ -489,24 +489,27 @@ void socket_udp(char *ID_protocol,char *Transport_Layer){
     setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
     setsockopt (sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof timeout);
 
-    while (1) {
-        
-        int r = sendto(sock, message, size, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
-        ESP_LOGI(TAG, "Se enviaron los datos");
+    int r = sendto(sock, message, size, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    ESP_LOGI(TAG, "Se enviaron los datos");
 
-        char rx_buffer[128];
-        int rx_len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, NULL, NULL);
-        ESP_LOGI(TAG, "Datos recibidos: %s\n", rx_buffer);
-        if (rx_len < 0) {
-            continue;
-        } else if (strcmp(rx_buffer, "TCP") == 0) {
-            ESP_LOGI(TAG, "Cambiando a Protocolo TCP\n");
-            break;
-        }
+    char rx_buffer[128];
+    rx_buffer[0] = '\0';
+    int rx_len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, NULL, NULL);
+    ESP_LOGI(TAG, "Datos recibidos (%d): %s\n", rx_len,rx_buffer);
+    close(sock);
+    if (rx_len < 0) {
+    } else if (strcmp(rx_buffer, "TCP") == 0) {
+        ESP_LOGI(TAG, "Cambiando a Protocolo TCP\n");
+        return 1;
     }
 
+    return 0;
+}
 
-    close(sock);
+void socket_udp(char *ID_protocol,char *Transport_Layer){
+    while (udp_conn(ID_protocol, Transport_Layer) == 0) {
+    }
+    return;
 }
 
 
