@@ -274,19 +274,18 @@ def tcp_server():
         conn.close()
 
 
-def main():
-    try:
-        t1 = threading.Thread(target=tcp_server)
-        t2 = threading.Thread(target=udp_conn)
-        t1.start()
-        t2.start()
-        while True:
-            pass
+try:
+    t1 = threading.Thread(target=tcp_server)
+    t2 = threading.Thread(target=udp_conn)
+    t1.start()
+    t2.start()
+    while True:
+        pass
 
-    except Exception as e:
-        print(e)
-    except KeyboardInterrupt:
-        print("Cerrando el servidor...")
-        socketTCP.close()
-        socketUDP.close()
+except Exception as e:
+    print(e)
+except KeyboardInterrupt:
+    print("Cerrando el servidor...")
+    socketTCP.close()
+    socketUDP.close()
     
