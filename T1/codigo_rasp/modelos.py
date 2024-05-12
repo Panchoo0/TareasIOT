@@ -105,4 +105,4 @@ def create_tables():
         db.create_tables([Datos, Logs, Configuracion, Loss])
         Configuracion.create(ID_protocol='0', Transport_Layer='TCP')
 
-create_tables()
+# create_tables()
