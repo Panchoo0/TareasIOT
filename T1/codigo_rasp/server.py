@@ -241,20 +241,25 @@ import multiprocessing
 def udp_conn(result_queue):
     print("UDP esperando datos...")
     data, addr = socketUDP.recvfrom(MAX_SIZE)
-    print("Recibido: ", data)
+    print("Recibido (UDP): ", data)
     data = parse_data(data)
+
     if PRESSED_KEY == "t":
         socketUDP.settimeout(3)
         print("Enviando cambio a TCP a", addr)
         socketUDP.sendto("TCP\0".encode('utf-8'), addr)
         socketUDP.settimeout(None)
 
+    result_queue.put(data)
+
 
 def tcp_conn(conn, result_queue):
     print("TCP esperando datos...")
     data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
-    # print("Recibido: ", data)
+    print("Recibido (TCP): ", data)
     data = parse_data(data)
+
+    result_queue.put(data)
 
 
 def main():
