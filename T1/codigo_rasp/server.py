@@ -269,7 +269,7 @@ def tcp_server():
         if Transport_Layer == "UDP":
             print("La conexión es UDP, cerrando conexión TCP...")
             conn.close()
-            return
+            continue
         
         print("TCP esperando datos...")
         data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
