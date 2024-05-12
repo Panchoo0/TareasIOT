@@ -242,8 +242,8 @@ def main():
     # ID_protocol2 = Configuracion.get_by_id(1)# Aquí se debe hacer la consulta a la base de datos
     # print('id y layer 2: ',ID_protocol2)
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
-    conn.sendall(coded_message.encode('utf-8'))`
-    print("Enviado: ", coded_message)`
+    conn.sendall(coded_message.encode('utf-8'))
+    print("Enviado: ", coded_message)
 
     if Transport_Layer == "TCP":
         data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
