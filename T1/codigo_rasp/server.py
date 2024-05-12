@@ -1,9 +1,12 @@
 import socket
 import struct
+from pynput.mouse import Button, Controller
+from pynput import keyboard
 from modelos import db, Configuracion
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
 PORT_UDP = 1235
+MAX_SIZE = 1024 * 1024 * 1000
 
 # Crea un socket para IPv4 y conexión TCP
 socketTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -11,6 +14,25 @@ socketUDP = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 socketTCP.bind((HOST, PORT))
 socketUDP.bind((HOST, PORT_UDP))
+
+PRESSED_KEY = ""
+
+def on_press(key):
+    global PRESSED_KEY
+    if key == keyboard.Key.esc:
+        return False  # stop listener
+    try:
+        k = key.char  # single-char keys
+    except:
+        k = key.name  # other keys
+    if k in ['0', '1', '2', '3', '4', 't', 'u']:  # keys of interest
+        print('Key pressed: ' + k)
+        PRESSED_KEY = k
+
+
+listener = keyboard.Listener(on_press=on_press)
+listener.start()  # start to listen on a separate thread
+
 
 socketTCP.listen()
 
@@ -51,7 +73,7 @@ def parse_headers(data):
     Transport_layer = struct.unpack('<c', data[8:9])[0]
     ID_Protocol = struct.unpack('<c', data[9:10])[0]
 
-    msg_len = struct.unpack('>H', data[10:12])[0]
+    msg_len = struct.unpack('<H', data[10:12])[0]
 
     return {
         'id': id,
@@ -197,7 +219,6 @@ def parse_data(data):
     
 
 def add_data(data):
-
     return
 
 
@@ -207,22 +228,28 @@ def get_transport_layer(data):
 
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
-    ID_protocol, Transport_Layer = (4, "TCP") # Aquí se debe hacer la consulta a la base de datos
+    ID_protocol, Transport_Layer = (4, "TCP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
     # ID_protocol2 = Configuracion.get_by_id(1)# Aquí se debe hacer la consulta a la base de datos
     # print('id y layer 2: ',ID_protocol2)
     coded_message = f"{ID_protocol}:{Transport_Layer}" # Se le envia al microcontrolador el protocolo y el tipo de transporte
     conn.sendall(coded_message.encode('utf-8'))
-    max_data = 1024 * 1024 * 1000
 
     if Transport_Layer == "TCP":
-        data = conn.recv(1024 * 1024 * 1000)  # Recibe hasta 1024 bytes del cliente
+        data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
         # print("Recibido: ", data)
         data = parse_data(data)
-        conn.close()
 
     elif Transport_Layer == "UDP":
-        data, addr = socketUDP.recvfrom(max_data)
+        data, addr = socketUDP.recvfrom(MAX_SIZE)
         print("Recibido: ", data)
+        data = parse_data(data)
+        if PRESSED_KEY == "t":
+            socketUDP.sendto("TCP".encode('utf-8'), addr)
+
+    conn.close()
+
+
+
 
 while True:
     try:

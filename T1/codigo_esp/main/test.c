@@ -460,7 +460,7 @@ char *set_message(char* ID_protocol, char* Transport_Layer){
     return message;
 }
 
-void socket_udp(){
+void socket_udp(char *ID_protocol,int *Transport_Layer){
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_UDP_PORT);
@@ -474,11 +474,29 @@ void socket_udp(){
     }
 
     // Enviar mensaje continuamente hasta que se cambie el protocolo
-    sendto(sock, "hola mundo", strlen("hola mundo"), 0,
-           (struct sockaddr *)&server_addr, sizeof(server_addr));
+    // sendto(sock, "hola mundo", strlen("hola mundo"), 0,
+    //        (struct sockaddr *)&server_addr, sizeof(server_addr));
+
+    char *message = set_message(ID_protocol, Transport_Layer);
+    int size = get_procotol_length(ID_protocol);
+
+    ESP_LOGI(TAG, "Largo %d\n", size);
+
+    while (1) {
+        int r = sendto(sock, message, size, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+        ESP_LOGI(TAG, "Se enviaron los datos");
+
+        char rx_buffer[128];
+        int rx_len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, NULL, NULL);
+        if (rx_len < 0) {
+            continue;
+        } else if (strcmp(rx_buffer, "TCP") == 0) {
+            ESP_LOGI(TAG, "Cambiando a Protocolo TCP\n");
+            break;
+        }
+    }
 
 
-    ESP_LOGI(TAG, "Se enviaron los datos");
     close(sock);
 }
 
@@ -522,7 +540,7 @@ void socket_tcp(){
     if (strcmp(Transport_Layer, "UDP") == 0){
         close(sock);
         ESP_LOGI(TAG, "Protocolo UDP\n");
-        return socket_udp();
+        return socket_udp(ID_protocol, Transport_Layer);
     }
 
     ESP_LOGI(TAG, "Protocolo TCP\n");
@@ -532,7 +550,8 @@ void socket_tcp(){
 
     ESP_LOGI(TAG, "Largo %d\n", size);
 
-    send(sock, message, size, 0);
+    int r = send(sock, message, size, 0);
+    ESP_LOGI(TAG, "Se envió %d bytes\n", r);
     ESP_LOGI(TAG, "Se enviaron los datos\n");
     free(message);
 
