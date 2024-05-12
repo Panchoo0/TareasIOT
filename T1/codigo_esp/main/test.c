@@ -509,6 +509,7 @@ int udp_conn(char *ID_protocol,char *Transport_Layer) {
 void socket_udp(char *ID_protocol,char *Transport_Layer){
     while (udp_conn(ID_protocol, Transport_Layer) == 0) {
     }
+    esp_deep_sleep(10000000);
     return;
 }
 
@@ -539,6 +540,7 @@ void socket_tcp(){
     int rx_len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
     if (rx_len < 0) {
         ESP_LOGE(TAG, "Error al recibir datos\n");
+        esp_deep_sleep(10000000);
         return;
     }
     ESP_LOGI(TAG, "Datos recibidos: %s\n", rx_buffer);
