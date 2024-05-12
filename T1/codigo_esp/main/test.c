@@ -571,6 +571,8 @@ void socket_tcp(){
     ESP_LOGI(TAG, "Se enviaron los datos\n");
     free(message);
 
+    close(sock);
+
     // esp_deep_sleep_enable_timer_wakeup(60000000); // 10000000 us = 10 s
 
     // esp_deep_sleep_start();
