@@ -35,6 +35,13 @@ class Datos(BaseModel):
     press = IntegerField()
     hum = IntegerField()
     co = FloatField()
+    RMS = FloatField()  
+    Amp_x = FloatField()
+    Frec_x = FloatField()
+    Amp_y = FloatField()
+    Frec_y = FloatField()
+    Amp_z = FloatField()
+    Frec_z = FloatField()
     # """ acc_x = ArrayField(FloatField)
     # acc_y = ArrayField(FloatField)
     # acc_z = ArrayField(FloatField)
@@ -98,3 +105,5 @@ def create_tables():
     with db:
         db.create_tables([Datos, Logs, Configuracion, Loss])
         Configuracion.create(ID_protocol='0', Transport_Layer='TCP')
+
+create_tables()
