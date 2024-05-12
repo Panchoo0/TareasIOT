@@ -75,6 +75,7 @@ class Configuracion(BaseModel):
     
     def set_Transport_layer(new_Transport_layer):
         config = Configuracion.get_by_id(1)
+        print("Cambiando Transport Layer por", new_Transport_layer)
         config.Transport_layer = new_Transport_layer
         config.save()
 

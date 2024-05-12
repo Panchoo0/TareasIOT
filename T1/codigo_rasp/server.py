@@ -19,7 +19,6 @@ PRESSED_KEY = ""
 
 def on_press(key):
     global PRESSED_KEY
-    print("key pressed")
     if key == keyboard.Key.esc:
         return False  # stop listener
     try:
@@ -32,6 +31,7 @@ def on_press(key):
         if k == 't':
             Configuracion.set_Transport_layer("TCP")
         elif k == 'u':
+            print("UDP")
             Configuracion.set_Transport_layer("UDP")
         else:
             Configuracion.set_protocol(k)
