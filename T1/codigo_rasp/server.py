@@ -81,7 +81,7 @@ def parse_headers(data):
     print("mac", mac)
     
     Transport_layer = struct.unpack('<c', data[8:9])[0]
-    ID_Protocol = int(str(struct.unpack('<c', data[9:10])[0]))
+    ID_Protocol = struct.unpack('<B', data[9:10])[0]
 
     msg_len = struct.unpack('<H', data[10:12])[0]
 
@@ -323,11 +323,14 @@ except Exception as e:
     print(e)
 except KeyboardInterrupt:
     print("Cerrando el servidor...")
+    socketTCP.close()
+    socketUDP.close()
+
+
     t1.join()
     t2.join()
 
-    socketTCP.close()
-    socketUDP.close()
+    
 
     
     
