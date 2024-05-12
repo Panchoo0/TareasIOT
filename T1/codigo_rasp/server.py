@@ -227,7 +227,6 @@ def get_transport_layer(data):
     return
 
 
-socketTCP.setblocking(False)
 def main():
     conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
     ID_protocol, Transport_Layer = (4, "TCP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
