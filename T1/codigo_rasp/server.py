@@ -254,16 +254,20 @@ def udp_conn():
 
 def tcp_server():
     while True:
+        print("TCP esperando conexión...")
         conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
+
         ID_protocol = Configuracion.get_by_id(1).get_ID_protocol()
         Transport_Layer = Configuracion.get_by_id(1).get_Transport_layer()
         # ID_protocol, Transport_Layer = (3, "UDP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
+
         # Se le envia al microcontrolador el protocolo y el tipo de transporte
         coded_message = f"{ID_protocol}:{Transport_Layer}"
         print("Enviado: ", coded_message)
         conn.sendall(coded_message.encode('utf-8'))
 
         if Transport_Layer == "UDP":
+            print("La conexión es UDP, cerrando conexión TCP...")
             conn.close()
             return
         
