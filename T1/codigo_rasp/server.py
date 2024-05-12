@@ -251,11 +251,11 @@ def main():
         data = parse_data(data)
 
     elif Transport_Layer == "UDP":
+        socketUDP.settimeout(3)
         data, addr = socketUDP.recvfrom(MAX_SIZE)
         print("Recibido: ", data)
         data = parse_data(data)
         if PRESSED_KEY == "t":
-            socketUDP.settimeout(3)
             socketUDP.sendto("TCP".encode('utf-8'), addr)
             socketUDP.settimeout(None)
 
