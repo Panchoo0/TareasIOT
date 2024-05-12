@@ -8,7 +8,7 @@ from modelos import db, Configuracion
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
 PORT_UDP = 1235
-MAX_SIZE = 1024 * 1024 * 1000
+MAX_SIZE = 1024 * 1024 * 100
 
 # Crea un socket para IPv4 y conexión TCP
 socketTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -288,4 +288,7 @@ except KeyboardInterrupt:
     print("Cerrando el servidor...")
     socketTCP.close()
     socketUDP.close()
+
+    t1.join()
+    t2.join()
     
