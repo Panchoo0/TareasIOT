@@ -70,8 +70,9 @@ def parse_headers(data):
     if len(data) < 12:
         return None
     
-    id = struct.unpack('<h', data[:2])[0]
+    id = struct.unpack('>h', data[:2])[0]
     print("id", id)
+
     mac_1 = hex(struct.unpack('<B', data[2:3])[0])[2:]
     mac_2 = hex(struct.unpack('<B', data[3:4])[0])[2:]
     mac_3 = hex(struct.unpack('<B', data[4:5])[0])[2:]
