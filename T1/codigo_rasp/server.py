@@ -35,7 +35,6 @@ def on_press(key):
         if k == 't':
             Configuracion.set_Transport_layer("TCP")
         elif k == 'u':
-            print("UDP")
             Configuracion.set_Transport_layer("UDP")
         else:
             Configuracion.set_protocol(k)
@@ -48,23 +47,6 @@ listener.start()  # start to listen on a separate thread
 
 socketTCP.listen()
 
-
-
-# with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-#     s.bind((HOST, PORT))
-#     s.listen()
-
-#     print("El servidor está esperando conexiones en el puerto", PORT)
-
-#     while True:
-#         conn, addr = s.accept()  # Espera una conexión
-#         with conn:
-#             print('Conectado por', addr)
-#             data = conn.recv(1024)  # Recibe hasta 1024 bytes del cliente
-#             if data:
-#                 print("Recibido: ", data.decode('utf-8'))
-#                 respuesta = "tu mensaje es: " + data.decode('utf-8')
-#                 conn.sendall(respuesta.encode('utf-8'))  # Envía la respuesta al cliente
 
 def parse_headers(data):
     if len(data) < 12:
@@ -124,7 +106,6 @@ def parse_int(d_bytes):
 
 def parse_protocol_0(data):
     headers = parse_headers(data)
-    print("parsed",headers)
     batt_lvl = struct.unpack('<B', data[12:13])[0]
     print("batt_lvl", batt_lvl)
 
@@ -138,7 +119,6 @@ def parse_protocol_1(data):
     timestamp = data[13:17]
     last_mac_message = Datos.select().where(
         Datos.MAC == protocol_0['mac']).where(Datos.timestamp_sent != None).order_by(Datos.timestamp_sent.desc()).limit(1)
-    print("last_mac_message", last_mac_message)
     if not last_mac_message:
         timestamp = datetime.datetime.now()
     else:
@@ -155,7 +135,6 @@ def parse_protocol_2(data):
     print("temp", temp)
     press = parse_int(data[18:22])
     print("press", press)
-    print("press 2", struct.unpack('>i', data[18:22])[0])
 
     hum = struct.unpack('<B', data[22:23])[0]
     print("hum", hum)
@@ -182,14 +161,12 @@ def parse_protocol_3(data):
     freqz = parse_float(data[51:55])
 
     print("rms", rms)
-    print("rms 2", struct.unpack('>f', data[27:31])[0])
     print("ampx", ampx)
     print("freqx", freqx)
     print("ampy", ampy)
     print("freqy", freqy)
     print("ampz", ampz)
     print("freqz", freqz)
-    print("ampx as int", struct.unpack('>i', data[31:35])[0])
     
 
     return {
@@ -205,9 +182,7 @@ def parse_protocol_3(data):
 
 def parse_protocol_4(data):
     parse_data = parse_protocol_2(data)
-    print("Se parseo protocolo 2")
-    print(len(data))
-    print(len(data[27:27 + 8000]))
+    print("Se recibieron", len(data), "bytes")
     acc_x = struct.unpack('>f', data[27:27 + 8000])[0]
     # acc_y = struct.unpack('>f', data[27 + 8000:2*8000 + 27])[0]
     # acc_z = struct.unpack('>f', data[27 + 2*8000:3*8000 + 27])[0]
@@ -294,8 +269,7 @@ def udp_conn():
     while True:
         print("UDP esperando datos...")
         data, addr = socketUDP.recvfrom(MAX_SIZE)
-        print("Recibido (UDP): ", data)
-        parse_data(data)
+        print("Recibido (UDP)")
 
         if PRESSED_KEY == "t":
             socketUDP.settimeout(3)
@@ -333,7 +307,7 @@ def tcp_server():
         
         print("TCP esperando datos...")
         data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
-        print("Recibido (TCP): ", data)
+        print("Recibido (TCP)")
         parse_data(data)
         conn.close()
 
