@@ -57,7 +57,7 @@ class Datos(BaseModel):
 # Definicion modelo Logs
 # Conexiones recibidas por el servidor: Id_device, Transport_Layer, protocolo usado, timestamp
 class Logs(BaseModel):
-    ID_device = CharField()
+    ID_device = CharField(null=True)
     Transport_Layer = CharField()
     Protocol = CharField()
     timestamp = DateTimeField()
@@ -95,7 +95,7 @@ class Configuracion(BaseModel):
 # timestamp(escritura datos - envio de datos), packet_loss
 class Loss(BaseModel):
     comm_timestamp = IntegerField()
-    packet_loss = CharField()
+    packet_loss = IntegerField()
 
 
 ## Ver la documentación de peewee para más información, es super parecido a Django

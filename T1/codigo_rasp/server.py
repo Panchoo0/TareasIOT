@@ -4,7 +4,7 @@ import socket
 import struct
 from pynput.mouse import Button, Controller
 from pynput import keyboard
-from modelos import db, Configuracion, Datos
+from modelos import *
 import datetime
 
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
@@ -236,6 +236,15 @@ def parse_data(data):
             parse_data = parse_protocol_3(data)
         elif protocol == b'\x04':
             parse_data = parse_protocol_4(data)
+
+        if not parse_data:
+            return None
+        
+        if parse_data['msg_len'] != len(data):
+            Loss.create(
+                comm_timestamp=datetime.datetime.now() - parse_data['timestamp'],
+                packet_loss=len(data) - parse_data['msg_len']
+            )
 
         Datos.create(
             ID_message = parse_data['id'] if 'id' in parse_data else None,
