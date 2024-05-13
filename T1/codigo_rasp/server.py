@@ -72,7 +72,8 @@ def parse_headers(data):
         Transport_layer = "TCP"
     ID_Protocol = struct.unpack('<B', data[9:10])[0]
 
-    msg_len = struct.unpack('<H', data[10:12])[0]
+    msg_len = struct.unpack('>H', data[10:12])[0]
+    print(msg_len)
 
     return {
         'id': id,
@@ -184,22 +185,22 @@ def parse_protocol_4(data):
     parse_data = parse_protocol_2(data)
     print("Se recibieron", len(data), "bytes")
     acc_x = [struct.unpack('>f', data[27 + i*4:27 + (i + 1)*4])[0] for i in range(2000)]
-    # acc_y = struct.unpack('>f', data[27 + 8000:2*8000 + 27])[0]
-    # acc_z = struct.unpack('>f', data[27 + 2*8000:3*8000 + 27])[0]
-    # rgyr_x = struct.unpack('>f', data[27 + 3*8000:4*8000 + 27])[0]
-    # rgyr_y = struct.unpack('>f', data[27 + 4*8000:5*8000 + 27])[0]
-    # rgyr_z = struct.unpack('>f', data[27 + 5*8000:6*8000 + 27])[0]
+    acc_y = [struct.unpack('>f', data[27 + 8000 + i*4:27 + 8000 + (i + 1)*4])[0] for i in range(2000)]
+    acc_z = [struct.unpack('>f', data[27 + 2*8000 + i*4:27 + 2*8000 + (i + 1)*4])[0] for i in range(2000)]
+    rgyr_x = [struct.unpack('>f', data[27 + 3*8000 + i*4:27 + 3*8000 + (i + 1)*4])[0] for i in range(2000)]
+    rgyr_y = [struct.unpack('>f', data[27 + 4*8000 + i*4:27 + 4*8000 + (i + 1)*4])[0] for i in range(2000)]
+    rgyr_z = [struct.unpack('>f', data[27 + 5*8000 + i*4:27 + 5*8000 + (i + 1)*4])[0] for i in range(2000)]
 
-    print("acc_x", acc_x[:27])
+
 
     return {
         **parse_data,
         'acc_x': acc_x,
-        # 'acc_y': acc_y,
-        # 'acc_z': acc_z,
-        # 'rgyr_x': rgyr_x,
-        # 'rgyr_y': rgyr_y,
-        # 'rgyr_z': rgyr_z
+        'acc_y': acc_y,
+        'acc_z': acc_z,
+        'rgyr_x': rgyr_x,
+        'rgyr_y': rgyr_y,
+        'rgyr_z': rgyr_z
     }
 
 
