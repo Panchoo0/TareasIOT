@@ -458,7 +458,8 @@ char *set_message(char* ID_protocol, char* Transport_Layer, char *ID_message){
     int id = atoi(ID_message);
     message[0] = (char)id >> 8;
     message[1] = (char)id & 0xFF;
-    printf("ID message %id\n",ID_message);
+    printf("ID message s %s\n",ID_message);
+    printf("ID message i %d\n",id);
 
     return message;
 }

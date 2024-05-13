@@ -287,7 +287,7 @@ def tcp_server():
 
         ID_protocol = Configuracion.get_by_id(1).get_ID_protocol()
         Transport_Layer = Configuracion.get_by_id(1).get_Transport_layer()
-        id_message = Configuracion.select()
+        id_message = len(Configuracion.select())
         # ID_protocol, Transport_Layer = (3, "UDP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
 
         # Se le envia al microcontrolador el protocolo y el tipo de transporte
