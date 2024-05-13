@@ -74,6 +74,8 @@ def parse_headers(data):
 
     msg_len_1 = struct.unpack('<B', data[10:11])[0]
     msg_len_2 = struct.unpack('<B', data[11:12])[0]
+    print("size 1", msg_len_1)
+    print("size 2", msg_len_2)
     msg_len = msg_len_1 | msg_len_2 << 8
     print('msg_len', msg_len)
 
