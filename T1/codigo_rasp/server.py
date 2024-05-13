@@ -275,6 +275,7 @@ def udp_conn():
         print("UDP esperando datos...")
         data, addr = socketUDP.recvfrom(MAX_SIZE)
         print("Recibido (UDP)")
+        parse_data(data)
 
         if PRESSED_KEY == "t":
             socketUDP.settimeout(3)
