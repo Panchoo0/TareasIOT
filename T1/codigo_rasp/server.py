@@ -308,6 +308,12 @@ def tcp_server():
         print("TCP esperando datos...")
         data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
         print("Recibido (TCP)")
+        parsed_headers = parse_headers(data)
+        if parsed_headers['ID_Protocol'] == "4":
+            for i in range(47):
+                data += conn.recv(MAX_SIZE)
+                print("Recibido (TCP) parte", i + 1)
+
         parse_data(data)
         conn.close()
 

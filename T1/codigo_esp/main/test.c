@@ -574,7 +574,23 @@ void socket_tcp(){
     int size = get_procotol_length(ID_protocol);
 
     ESP_LOGI(TAG, "Largo %d\n", size);
-    int r = send(sock, message, size, 0);
+
+    if (size > 1000) {
+        int sizeToSend = size;
+        for (int i = 0; i < size; i+=1000) {
+            if (sizeToSend < 1000) {
+                int r = send(sock, message + i, sizeToSend, 0);
+                ESP_LOGI(TAG, "Se envió %d bytes\n", r);
+                break;
+            }
+            int r = send(sock, message + i, 1000, 0);
+            sizeToSend -= 1000;
+            ESP_LOGI(TAG, "Se envió %d bytes\n", r);
+        }
+    } else {
+        int r = send(sock, message, size, 0);
+    }
+
     
     ESP_LOGI(TAG, "Se envió %d bytes\n", r);
     ESP_LOGI(TAG, "Se enviaron los datos\n");
