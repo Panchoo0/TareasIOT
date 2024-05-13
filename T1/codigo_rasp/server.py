@@ -241,6 +241,7 @@ def parse_data(data):
             return None
         
         if parse_data['msg_len'] != len(data):
+            print("Se perdieron", len(data) - parse_data['msg_len'], "bytes")
             Loss.create(
                 comm_timestamp=datetime.datetime.now() - parse_data['timestamp'],
                 packet_loss=len(data) - parse_data['msg_len']
@@ -312,6 +313,13 @@ def tcp_server():
         coded_message = f"{ID_protocol}:{Transport_Layer}:{id_message}"
         print("Enviado: ", coded_message)
         conn.sendall(coded_message.encode('utf-8'))
+
+        Logs.create(
+            ID_device=str(addr),
+            Transport_Layer=Transport_Layer,
+            Protocol=ID_protocol,
+            timestamp=datetime.datetime.now()
+        )
 
         if Transport_Layer == "UDP":
             print("La conexión es UDP, cerrando conexión TCP...")
