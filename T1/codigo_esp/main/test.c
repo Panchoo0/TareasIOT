@@ -499,6 +499,7 @@ int udp_conn(char *ID_protocol,char *Transport_Layer, char *ID_message) {
     char rx_buffer[128];
     rx_buffer[0] = '\0';
     int rx_len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, NULL, NULL);
+    rx_buffer[rx_len] = '\0';
     ESP_LOGI(TAG, "Datos recibidos (%d): %s\n", rx_len,rx_buffer);
     close(sock);
     if (rx_len < 0) {

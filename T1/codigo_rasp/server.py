@@ -5,6 +5,8 @@ import struct
 from pynput.mouse import Button, Controller
 from pynput import keyboard
 from modelos import db, Configuracion, Datos
+import datetime
+
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
 PORT = 1234       # Puerto en el que se escucha
 PORT_UDP = 1235
@@ -90,7 +92,7 @@ def parse_headers(data):
         'mac': mac,
         'Transport_layer': Transport_layer,
         'ID_Protocol': ID_Protocol,
-        'msg_len': msg_len
+        'msg_len': msg_len,
     }
 
 def parse_float(d_bytes):
@@ -129,6 +131,11 @@ def parse_protocol_0(data):
 def parse_protocol_1(data):
     protocol_0 = parse_protocol_0(data)
     timestamp = data[13:17]
+    last_mac_message = Configuracion.select().where(MAC=protocol_0['mac']).order_by(Datos.timestamp_rcv.desc())
+    if not last_mac_message:
+        timestamp = datetime.datetime.now()
+    else:
+        timestamp = last_mac_message[0].timestamp_sent + (datetime.datetime.now() - last_mac_message[0].timestamp_rcv)
     print("timestamp", timestamp) 
     return {
         **protocol_0,
@@ -252,7 +259,7 @@ def parse_data(data):
             ID_device = parse_data['id'] if 'id' in parse_data else None,
             MAC = parse_data['mac'] if 'mac' in parse_data else None,
 
-            timestamp_rcv=parse_data['timestamp'] if 'timestamp' in parse_data else None,
+            timestamp_rcv=datetime.datetime.now()
 
         )
         
