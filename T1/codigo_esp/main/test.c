@@ -504,6 +504,7 @@ int udp_conn(char *ID_protocol,char *Transport_Layer, char *ID_message) {
     close(sock);
     if (rx_len < 0) {
     } else if (strcmp(rx_buffer, "TCP") == 0) {
+        rx_buffer[rx_len] = '\0';
         ESP_LOGI(TAG, "Cambiando a Protocolo TCP\n");
         return 1;
     }
@@ -529,6 +530,7 @@ void socket_tcp(){
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock < 0) {
         ESP_LOGE(TAG, "Error al crear el socket");
+        esp_deep_sleep(10000000);
         return;
     }
 
@@ -536,6 +538,7 @@ void socket_tcp(){
     if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) != 0) {
         ESP_LOGE(TAG, "Error al conectar");
         close(sock);
+        esp_deep_sleep(10000000);
         return;
     }
 
