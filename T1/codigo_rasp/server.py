@@ -316,7 +316,7 @@ def tcp_server():
         parsed_headers = parse_headers(data)
         if parsed_headers['ID_Protocol'] == 4:
             parte = 2
-            while parsed_headers['msg_length'] != len(data):
+            while parsed_headers['msg_len'] != len(data):
                 data += conn.recv(MAX_SIZE)
                 print("Recibido (TCP) parte", parte)
                 print("Data len", len(data))
