@@ -580,10 +580,18 @@ void socket_tcp(){
         for (int i = 0; i < size; i+=1000) {
             if (sizeToSend < 1000) {
                 int r = send(sock, message + i, sizeToSend, 0);
+                if (r < 0) {
+                    ESP_LOGE(TAG, "ERROR AL ENVIAR DATOS");
+                    continue;
+                }
                 ESP_LOGI(TAG, "Se envió %d bytes\n", r);
                 break;
             }
             int r = send(sock, message + i, 1000, 0);
+            if (r <0) {
+                ESP_LOGE(TAG, "ERROR AL ENVIAR DATOS");
+                continue;
+            }
             sizeToSend -= 1000;
             ESP_LOGI(TAG, "Se envió %d bytes\n", r);
         }
