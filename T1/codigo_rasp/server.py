@@ -84,6 +84,10 @@ def parse_headers(data):
     print("mac", mac)
     
     Transport_layer = struct.unpack('<c', data[8:9])[0]
+    if Transport_layer == b'\x00':
+        Transport_layer = "UDP"
+    else:
+        Transport_layer = "TCP"
     ID_Protocol = struct.unpack('<B', data[9:10])[0]
 
     msg_len = struct.unpack('<H', data[10:12])[0]
