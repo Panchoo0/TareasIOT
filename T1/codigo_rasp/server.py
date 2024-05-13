@@ -132,12 +132,12 @@ def parse_protocol_1(data):
     protocol_0 = parse_protocol_0(data)
     timestamp = data[13:17]
     last_mac_message = Datos.select().where(
-        Datos.MAC == protocol_0['mac']).where(Datos.timestamp_rcv != None).order_by(Datos.timestamp_rcv.desc()).limit(1)
+        Datos.MAC == protocol_0['mac']).where(Datos.timestamp_sent != None).order_by(Datos.timestamp_sent.desc()).limit(1)
     print("last_mac_message", last_mac_message)
     if not last_mac_message:
         timestamp = datetime.datetime.now()
     else:
-        timestamp = last_mac_message[0].timestamp_sent + (datetime.datetime.now() - last_mac_message[0].timestamp_rcv)
+        timestamp = last_mac_message[0].timestamp_sent + (datetime.datetime.now() - last_mac_message[0].timestamp_sent)
     print("timestamp", timestamp) 
     return {
         **protocol_0,
