@@ -592,7 +592,6 @@ void socket_tcp(){
     }
 
     
-    ESP_LOGI(TAG, "Se envió %d bytes\n", r);
     ESP_LOGI(TAG, "Se enviaron los datos\n");
     free(message);
 
