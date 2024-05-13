@@ -366,9 +366,6 @@ void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
     message[10] = (char) (size >> 8 &0xFF);
     message[11] = (char) (size & 0xFF);
 
-    printf("Size 1: %c\n",message[10]);
-    printf("Size 2: %c\n",message[11]);
-
 
     int *acc_x = malloc(2000 * sizeof(int));
     int *acc_y = malloc(2000 * sizeof(int));
