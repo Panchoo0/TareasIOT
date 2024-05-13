@@ -363,7 +363,7 @@ void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
     set_protocol_2(message, ID_protocol, Transport_Layer);
 
     int size = 48027;
-    message[10] = (char) (size >> 8);
+    message[10] = (char) (size >> 8 &0xFF);
     message[11] = (char) (size & 0xFF);
 
     printf("Size 1: %c\n",message[10]);

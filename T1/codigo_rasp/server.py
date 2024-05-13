@@ -228,7 +228,8 @@ def parse_data(data):
         if parse_data['msg_len'] != len(data):
             print("Se perdieron", len(data) - parse_data['msg_len'], "bytes")
             Loss.create(
-                comm_timestamp=int(datetime.datetime.now() - parse_data['timestamp']),
+                comm_timestamp=(datetime.datetime.now() -
+                                parse_data['timestamp']).total_seconds(),
                 packet_loss=len(data) - parse_data['msg_len']
             )
 
@@ -334,6 +335,8 @@ try:
 
 except Exception as e:
     print(e)
+    socketTCP.close()
+    socketUDP.close()
 except KeyboardInterrupt:
     print("Cerrando el servidor...")
 
@@ -343,3 +346,7 @@ except KeyboardInterrupt:
 
     t1.join()
     t2.join()
+
+finally:
+    socketTCP.close()
+    socketUDP.close()
