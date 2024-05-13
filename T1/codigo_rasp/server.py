@@ -183,7 +183,7 @@ def parse_protocol_3(data):
 def parse_protocol_4(data):
     parse_data = parse_protocol_2(data)
     print("Se recibieron", len(data), "bytes")
-    acc_x = struct.unpack('>' + 'f'*2000, data[27:27 + 8000])[0]
+    acc_x = [struct.unpack('>f', data[27 + i*4:27 + (i + 1)*4])[0] for i in range(2000)]
     # acc_y = struct.unpack('>f', data[27 + 8000:2*8000 + 27])[0]
     # acc_z = struct.unpack('>f', data[27 + 2*8000:3*8000 + 27])[0]
     # rgyr_x = struct.unpack('>f', data[27 + 3*8000:4*8000 + 27])[0]
