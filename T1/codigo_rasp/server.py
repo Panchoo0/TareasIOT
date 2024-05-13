@@ -261,12 +261,7 @@ def parse_data(data):
         return None
     
 
-def add_data(data):
-    return
 
-
-def get_transport_layer(data):
-    return
 
 
 import threading
@@ -292,10 +287,11 @@ def tcp_server():
 
         ID_protocol = Configuracion.get_by_id(1).get_ID_protocol()
         Transport_Layer = Configuracion.get_by_id(1).get_Transport_layer()
+        id_message = Configuracion.select()
         # ID_protocol, Transport_Layer = (3, "UDP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
 
         # Se le envia al microcontrolador el protocolo y el tipo de transporte
-        coded_message = f"{ID_protocol}:{Transport_Layer}"
+        coded_message = f"{ID_protocol}:{Transport_Layer}:{id_message}"
         print("Enviado: ", coded_message)
         conn.sendall(coded_message.encode('utf-8'))
 

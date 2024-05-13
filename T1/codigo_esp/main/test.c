@@ -14,11 +14,11 @@
 #include "nvs_flash.h"
 #include "lwip/sockets.h" // Para sockets
 
-#include <time.h>
+#include <sys/time.h>
 #include <stdlib.h>
 #include <math.h>
 #include "esp_mac.h"
-
+#include "esp_sntp.h"
 
 //Credenciales de WiFi
 
@@ -196,7 +196,6 @@ void rgyro(int *data) {
 }
 
 void mac(uint8_t *base_mac_addr) {
-    esp_err_t ret = ESP_OK;
     esp_read_mac(base_mac_addr, ESP_MAC_WIFI_STA);
 }
 
@@ -436,7 +435,7 @@ int get_procotol_length(char *ID_protocol){
     return 0;
 }
 
-char *set_message(char* ID_protocol, char* Transport_Layer){
+char *set_message(char* ID_protocol, char* Transport_Layer, char *ID_message){
     char *message = NULL;
     if (strcmp(ID_protocol, "0") == 0){
         message = (char *) malloc(13 * sizeof(char));
@@ -456,11 +455,15 @@ char *set_message(char* ID_protocol, char* Transport_Layer){
         printf("Creado arreglo \n");
         set_protocol_4(message, ID_protocol, Transport_Layer);
     }
+    int id = atoi(ID_message);
+    message[0] = (char)id >> 8;
+    message[1] = (char)id & 0xFF;
+    printf("ID message %id\n",ID_message);
 
     return message;
 }
 
-int udp_conn(char *ID_protocol,char *Transport_Layer) {
+int udp_conn(char *ID_protocol,char *Transport_Layer, char *ID_message) {
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERVER_UDP_PORT);
@@ -477,7 +480,7 @@ int udp_conn(char *ID_protocol,char *Transport_Layer) {
     // sendto(sock, "hola mundo", strlen("hola mundo"), 0,
     //        (struct sockaddr *)&server_addr, sizeof(server_addr));
 
-    char *message = set_message(ID_protocol, Transport_Layer);
+    char *message = set_message(ID_protocol, Transport_Layer, ID_message);
     int size = get_procotol_length(ID_protocol);
 
     ESP_LOGI(TAG, "Largo %d\n", size);
@@ -489,7 +492,7 @@ int udp_conn(char *ID_protocol,char *Transport_Layer) {
     setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
     setsockopt (sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof timeout);
 
-    int r = sendto(sock, message, size, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+    sendto(sock, message, size, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
     ESP_LOGI(TAG, "Se enviaron los datos");
 
     char rx_buffer[128];
@@ -506,8 +509,8 @@ int udp_conn(char *ID_protocol,char *Transport_Layer) {
     return 0;
 }
 
-void socket_udp(char *ID_protocol,char *Transport_Layer){
-    while (udp_conn(ID_protocol, Transport_Layer) == 0) {
+void socket_udp(char *ID_protocol,char *Transport_Layer, char *ID_message){
+    while (udp_conn(ID_protocol, Transport_Layer, ID_message) == 0) {
     }
     esp_deep_sleep(10000000);
     return;
@@ -550,18 +553,20 @@ void socket_tcp(){
     char *ID_protocol = tokens;
     tokens = strtok(NULL, ":");
     char *Transport_Layer = tokens;
+    tokens = strtok(NULL, ":");
+    char *ID_message = tokens;
 
     if (strcmp(Transport_Layer, "UDP") == 0){
         close(sock);
         ESP_LOGI(TAG, "Protocolo UDP\n");
-        return socket_udp(ID_protocol, Transport_Layer);
+        return socket_udp(ID_protocol, Transport_Layer, ID_message);
     }
 
     ESP_LOGI(TAG, "Protocolo TCP\n");
     ESP_LOGI(TAG, "Protocolo %s\n", ID_protocol);
 
 
-    char *message = set_message(ID_protocol, Transport_Layer);
+    char *message = set_message(ID_protocol, Transport_Layer, ID_message);
     int size = get_procotol_length(ID_protocol);
 
     ESP_LOGI(TAG, "Largo %d\n", size);
@@ -583,11 +588,13 @@ void socket_tcp(){
 
 
 
+
 void app_main(void){
     nvs_init();
     wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
     ESP_LOGI(TAG,"Conectado a WiFi!\n");
     srand(time(NULL));
+    
     socket_tcp();
 
     
