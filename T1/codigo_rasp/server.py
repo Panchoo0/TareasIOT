@@ -74,8 +74,6 @@ def parse_headers(data):
 
     msg_len_1 = struct.unpack('<B', data[10:11])[0]
     msg_len_2 = struct.unpack('<B', data[11:12])[0]
-    print("size 1", msg_len_1)
-    print("size 2", msg_len_2)
     msg_len = "{0:b}".format(msg_len_1) + "{0:b}".format(msg_len_2)
     msg_len = int(msg_len, 2)
     print('msg_len', msg_len)
@@ -317,10 +315,12 @@ def tcp_server():
         print("Recibido (TCP)")
         parsed_headers = parse_headers(data)
         if parsed_headers['ID_Protocol'] == 4:
-            for i in range(47):
+            parte = 2
+            while parse_headers['msg_length'] != len(data):
                 data += conn.recv(MAX_SIZE)
-                print("Recibido (TCP) parte", i + 1)
+                print("Recibido (TCP) parte", parte)
                 print("Data len", len(data))
+                parte += 1
 
         parse_data(data)
         conn.close()
