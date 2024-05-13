@@ -330,5 +330,10 @@ except Exception as e:
     print(e)
 except KeyboardInterrupt:
     print("Cerrando el servidor...")
+
+
     socketTCP.close()
     socketUDP.close()
+
+    t1.join()
+    t2.join()
