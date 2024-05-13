@@ -74,7 +74,7 @@ def parse_headers(data):
 
     msg_len_1 = struct.unpack('<B', data[10:11])[0]
     msg_len_2 = struct.unpack('<B', data[11:12])[0]
-    msg_len = msg_len_1 << 8 | msg_len_2
+    msg_len = msg_len_1 | msg_len_2 << 8
     print('msg_len', msg_len)
 
     return {
@@ -226,7 +226,7 @@ def parse_data(data):
         if parse_data['msg_len'] != len(data):
             print("Se perdieron", len(data) - parse_data['msg_len'], "bytes")
             Loss.create(
-                comm_timestamp=datetime.datetime.now() - parse_data['timestamp'],
+                comm_timestamp=int(datetime.datetime.now() - parse_data['timestamp']),
                 packet_loss=len(data) - parse_data['msg_len']
             )
 

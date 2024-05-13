@@ -2,11 +2,13 @@
 
 ### Integrantes
 
-- Nombre y Apellido
-- Nombre y Apellido
-- Nombre y Apellido
+- Francisco Galdames
+- Valentina Vásquez
+- Vicente Soto
 
 ---
+
+
 
 _Aqui deben de hacer un readme con la estrucutra y flujo basico de su arquitectura_
 
@@ -30,5 +32,5 @@ docker compose down
 
 ```bash
 docker compose down 
-docker volume rm postgres_data_iot
+docker volume rm t1_postgres_data_iot
 ```
