@@ -183,7 +183,7 @@ def parse_protocol_3(data):
 def parse_protocol_4(data):
     parse_data = parse_protocol_2(data)
     print("Se recibieron", len(data), "bytes")
-    acc_x = struct.unpack('>f', data[27:27 + 8000])[0]
+    acc_x = struct.unpack('>' + 'f'*2000, data[27:27 + 8000])[0]
     # acc_y = struct.unpack('>f', data[27 + 8000:2*8000 + 27])[0]
     # acc_z = struct.unpack('>f', data[27 + 2*8000:3*8000 + 27])[0]
     # rgyr_x = struct.unpack('>f', data[27 + 3*8000:4*8000 + 27])[0]
@@ -309,7 +309,6 @@ def tcp_server():
         data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
         print("Recibido (TCP)")
         parsed_headers = parse_headers(data)
-        print(type(parsed_headers['ID_Protocol']))
         if parsed_headers['ID_Protocol'] == 4:
             for i in range(47):
                 data += conn.recv(MAX_SIZE)
