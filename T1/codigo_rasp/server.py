@@ -72,7 +72,9 @@ def parse_headers(data):
         Transport_layer = "TCP"
     ID_Protocol = struct.unpack('<B', data[9:10])[0]
 
-    msg_len = struct.unpack('>H', data[10:12])[0]
+    msg_len_1 = struct.unpack('<B', data[10:11])[0]
+    msg_len_2 = struct.unpack('<B', data[11:12])[0]
+    msg_len = msg_len_1 << 8 | msg_len_2
     print('msg_len', msg_len)
 
     return {
