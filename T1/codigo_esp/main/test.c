@@ -224,8 +224,8 @@ void set_headers(char *headers, char *ID_protocol, char *Transport_Layer) {
 }
 
 void set_protocol_0(char *message, char* ID_protocol, char* Transport_Layer){
-    message[10] = 13; // Tamaño del mensaje
-    message[11] = 0; // Tamano del mensaje
+    message[10] = 0; // Tamaño del mensaje
+    message[11] = 13; // Tamano del mensaje
     message[12] = (char) gen_batt_lvl(); // batt lvl
     printf("Batt lvl: %d\n", message[12]);
     set_headers(message, ID_protocol, Transport_Layer);
@@ -235,8 +235,8 @@ void set_protocol_1(char *message, char* ID_protocol, char* Transport_Layer){
     set_headers(message, ID_protocol, Transport_Layer);
     set_protocol_0(message, ID_protocol, Transport_Layer);
 
-    message[10] = 17; // Tamaño del mensaje
-    message[11] = 0; // Tamano del mensaje
+    message[10] = 0; // Tamaño del mensaje
+    message[11] = 17; // Tamano del mensaje
 
     // Agregar timestamp --> gettimeofday() <--
     message[13] = 0;
@@ -249,8 +249,8 @@ void set_protocol_2(char *message, char* ID_protocol, char* Transport_Layer){
     set_headers(message, ID_protocol, Transport_Layer);
     set_protocol_1(message, ID_protocol, Transport_Layer);
 
-    message[10] = 27; // Tamaño del mensaje
-    message[11] = 0; // Tamano del mensaje
+    message[10] = 0; // Tamaño del mensaje
+    message[11] = 27; // Tamano del mensaje
 
     message[17] = (char) gen_tmp(); // temp
     printf("Temperatura: %d\n", message[17]);
@@ -278,8 +278,8 @@ void set_protocol_3(char *message,  char* ID_protocol, char* Transport_Layer){
     set_headers(message, ID_protocol, Transport_Layer);
     set_protocol_2(message, ID_protocol, Transport_Layer);
 
-    message[10] = 55; // Tamaño del mensaje
-    message[11] = 0; // Tamano del mensaje
+    message[10] = 0; // Tamaño del mensaje
+    message[11] = 55; // Tamano del mensaje
 
     float fampx = gen_ampx();
     float fampy = gen_ampy();
@@ -375,8 +375,6 @@ void set_protocol_4(char *message, char* ID_protocol, char* Transport_Layer){
     acc(acc_y);
     acc(acc_z);
 
-    print_first_20(acc_x);
-
     int *gyro_x = malloc(2000 * sizeof(int));
     int *gyro_y = malloc(2000 * sizeof(int));
     int *gyro_z = malloc(2000 * sizeof(int));
@@ -459,7 +457,7 @@ char *set_message(char* ID_protocol, char* Transport_Layer, char *ID_message){
     int id = atoi(ID_message);
     message[0] = (char)id >> 8;
     message[1] = (char)id & 0xFF;
-    printf("ID message i %d\n",id);
+    printf("ID message %d\n",id);
 
     return message;
 }
@@ -477,9 +475,6 @@ int udp_conn(char *ID_protocol,char *Transport_Layer, char *ID_message) {
         return 0;
     }
 
-    // Enviar mensaje continuamente hasta que se cambie el protocolo
-    // sendto(sock, "hola mundo", strlen("hola mundo"), 0,
-    //        (struct sockaddr *)&server_addr, sizeof(server_addr));
 
     char *message = set_message(ID_protocol, Transport_Layer, ID_message);
     int size = get_procotol_length(ID_protocol);
@@ -487,7 +482,7 @@ int udp_conn(char *ID_protocol,char *Transport_Layer, char *ID_message) {
     ESP_LOGI(TAG, "Largo %d\n", size);
 
     struct timeval timeout;      
-    timeout.tv_sec = 3;
+    timeout.tv_sec = 5;
     timeout.tv_usec = 0;
 
     setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
