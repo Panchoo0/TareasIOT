@@ -44,10 +44,10 @@ def conf_status_0():
 def conf_status_20():
     pass
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    dialog = ConfigDialog()
-    dialog.show()
-    sys.exit(app.exec_())
+# if __name__ == "__main__":
+#     app = QApplication(sys.argv)
+#     dialog = ConfigDialog()
+#     dialog.show()
+#     sys.exit(app.exec_())
 
     
