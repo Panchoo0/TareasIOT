@@ -37,6 +37,7 @@ def conf_status_0():
     try:
         adapter.start()
         device = adapter.connect(ESP32_1_MAC_ADDRESS)
+        print("hola me conecte")
         
     finally:
         adapter.stop()
