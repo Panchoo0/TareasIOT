@@ -3,10 +3,10 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QDialog
 import pygatt
 
-class ConfigDialog(QDialog):
-    def __init__(self):
-        super().__init__()
-        uic.loadUi('iot_tarea2.ui', self)  # Load the .ui file
+# class ConfigDialog(QDialog):
+#     def __init__(self):
+#         super().__init__()
+#         uic.loadUi('iot_tarea2.ui', self)  # Load the .ui file
 
 
 # ESP32 MAC ADDRESS 1 y 2
