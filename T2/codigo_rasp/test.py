@@ -44,7 +44,7 @@ def conf_status_0():
 def conf_status_20():
     pass
 
-conf_status_20()
+conf_status_0()
 
 # if __name__ == "__main__":
 #     app = QApplication(sys.argv)
