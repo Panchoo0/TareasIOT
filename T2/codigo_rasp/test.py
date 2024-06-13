@@ -10,7 +10,7 @@ import pygatt
 
 
 # ESP32 MAC ADDRESS 1 y 2
-ESP32_1_MAC_ADDRESS = "c8:2e:18:f4:e6:16"
+ESP32_1_MAC_ADDRESS = "C8:2E:18:F4:E6:16"
 ESP32_2_MAC_ADDRESS = "XX:XX:.."
 
 # Parametros de configuracion
@@ -35,7 +35,7 @@ def conf_status_0():
 
     try:
         adapter.start()
-        device = adapter.connect(ESP32_1_MAC_ADDRESS)
+        device = adapter.connect(ESP32_1_MAC_ADDRESS, timeout=15)
         print("hola me conecte")
         
     finally:
