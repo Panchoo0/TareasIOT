@@ -2,7 +2,6 @@ import sys
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QDialog
 import pygatt
-from pymongo import MongoClient
 
 class ConfigDialog(QDialog):
     def __init__(self):
