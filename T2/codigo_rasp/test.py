@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QDialog
@@ -58,6 +59,7 @@ def conf_status_20():
 #     sys.exit(app.exec_())
 
 from bleak import BleakScanner
+import asyncio
 
 async def discover():
     # Con esto podemos ver los dispositivos que estan disponibles
@@ -76,4 +78,4 @@ async def main():
     await connect("C8:2E:18:F4:E6:16")
 
 if __name__ == "__main__":
-    main()
+   asyncio.run(main())
