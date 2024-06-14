@@ -61,23 +61,30 @@ def conf_status_20():
 
 
 import asyncio
+from bleak import BleakScanner, BleakClient
 
 async def discover():
-    # Con esto podemos ver los dispositivos que estan disponibles
+    # Con esto podemos ver los dispositivos que están disponibles
     scanner = BleakScanner()
     devices = await scanner.discover()
+    for device in devices:
+        print(device)
     return devices
-
 
 async def connect(device_mac):
     # Con esto nos conectamos a un dispositivo
-    client = BleakClient(device_mac)
-    connected = await client.connect()
-    return client, connected   
+    async with BleakClient(device_mac) as client:
+        connected = await client.is_connected()
+        if connected:
+            print(f"Conectado a {device_mac}")
+        else:
+            print(f"No se pudo conectar a {device_mac}")
+        return client, connected
 
 async def main():
-    await discover()
-    await connect("C8:2E:18:F4:E6:16")
+    devices = await discover()
+    if devices:
+        await connect("C8:2E:18:F4:E6:16")
 
 if __name__ == "__main__":
    asyncio.run(main())
