@@ -1,3 +1,4 @@
+from bleak import BleakScanner, BleakClient
 import asyncio
 import sys
 from PyQt5 import uic
@@ -58,7 +59,7 @@ def conf_status_20():
 #     dialog.show()
 #     sys.exit(app.exec_())
 
-from bleak import BleakScanner
+
 import asyncio
 
 async def discover():
@@ -75,6 +76,7 @@ async def connect(device_mac):
     return client, connected   
 
 async def main():
+    await discover()
     await connect("C8:2E:18:F4:E6:16")
 
 if __name__ == "__main__":
