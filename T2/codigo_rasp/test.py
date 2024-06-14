@@ -72,4 +72,8 @@ async def connect(device_mac):
     connected = await client.connect()
     return client, connected   
 
-connect("C8:2E:18:F4:E6:16")
+async def main():
+    await connect("C8:2E:18:F4:E6:16")
+
+if __name__ == "__main__":
+    main()
