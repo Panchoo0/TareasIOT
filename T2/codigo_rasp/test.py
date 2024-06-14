@@ -49,7 +49,7 @@ def conf_status_0():
 def conf_status_20():
     pass
 
-conf_status_0()
+# conf_status_0()
 
 # if __name__ == "__main__":
 #     app = QApplication(sys.argv)
@@ -57,4 +57,19 @@ conf_status_0()
 #     dialog.show()
 #     sys.exit(app.exec_())
 
-    
+from bleak import BleakScanner
+
+async def discover():
+    # Con esto podemos ver los dispositivos que estan disponibles
+    scanner = BleakScanner()
+    devices = await scanner.discover()
+    return devices
+
+
+async def connect(device_mac):
+    # Con esto nos conectamos a un dispositivo
+    client = BleakClient(device_mac)
+    connected = await client.connect()
+    return client, connected   
+
+connect("C8:2E:18:F4:E6:16")
