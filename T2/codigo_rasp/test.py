@@ -35,18 +35,19 @@ config_param = {
 def conf_status_0():
     adapter = pygatt.GATTToolBackend()
     ESP32_1_MAC_ADDRESS = "C8:2E:18:F4:E6:16"
-
-    try:
-        adapter.start()
-        print(f"Conectando a {ESP32_1_MAC_ADDRESS}...")
-        device = adapter.connect(
-            ESP32_1_MAC_ADDRESS, address_type=pygatt.BLEAddressType.random, timeout=15)
-    
-    except pygatt.exceptions.NotConnectedError:
-        print("No se pudo conectar al ESP32. Asegúrate de que el dispositivo está en modo de publicidad y dentro del alcance.")
+    while True:
+        try:
+            adapter.start()
+            print(f"Conectando a {ESP32_1_MAC_ADDRESS}...")
+            device = adapter.connect(
+                ESP32_1_MAC_ADDRESS, address_type=pygatt.BLEAddressType.random, timeout=15)
+            break
         
-    finally:
-        adapter.stop()
+        except pygatt.exceptions.NotConnectedError:
+            print("No se pudo conectar al ESP32. Asegúrate de que el dispositivo está en modo de publicidad y dentro del alcance.")
+
+    print("Conectado al ESP32")        
+    adapter.stop()
 
 def conf_status_20():
     pass
