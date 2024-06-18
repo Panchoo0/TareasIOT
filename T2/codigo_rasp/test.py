@@ -84,7 +84,10 @@ async def connect(device_mac):
 
 async def main():
     devices = await discover()
-    if devices:
+    index = 0
+    while True:
+        index += 1
+        print(f"Intento de conexión {index}")
         await connect("C8:2E:18:F4:E6:16")
 
 if __name__ == "__main__":
