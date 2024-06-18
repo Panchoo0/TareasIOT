@@ -13,7 +13,7 @@ import pygatt
 
 # ESP32 MAC ADDRESS 1 y 2
 ESP32_1_MAC_ADDRESS = "C8:2E:18:F4:E6:16"
-ESP32_2_MAC_ADDRESS = "XX:XX:.."
+ESP32_2_MAC_ADDRESS = "4C:EB:D6:61:FE:D6"
 
 # Parametros de configuracion
 config_param = {
@@ -52,14 +52,6 @@ def conf_status_0():
 def conf_status_20():
     pass
 
-# conf_status_0()
-
-# if __name__ == "__main__":
-#     app = QApplication(sys.argv)
-#     dialog = ConfigDialog()
-#     dialog.show()
-#     sys.exit(app.exec_())
-
 
 import asyncio
 from bleak import BleakScanner, BleakClient
@@ -89,7 +81,7 @@ async def main():
         try:
             index += 1
             print(f"Intento de conexión {index}")
-            await connect("C8:2E:18:F4:E6:16")
+            await connect(ESP32_2_MAC_ADDRESS)
             break
         except:
             print("No se pudo conectar")
