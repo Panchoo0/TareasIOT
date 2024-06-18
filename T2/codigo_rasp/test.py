@@ -83,12 +83,16 @@ async def connect(device_mac):
         return client, connected
 
 async def main():
-    devices = await discover()
+    # devices = await discover()
     index = 0
     while True:
-        index += 1
-        print(f"Intento de conexión {index}")
-        await connect("C8:2E:18:F4:E6:16")
+        try:
+            index += 1
+            print(f"Intento de conexión {index}")
+            await connect("C8:2E:18:F4:E6:16")
+            break
+        except:
+            print("No se pudo conectar")
 
 if __name__ == "__main__":
    asyncio.run(main())
