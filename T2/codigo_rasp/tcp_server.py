@@ -4,7 +4,7 @@ import socket
 import struct
 from pynput.mouse import Button, Controller
 from pynput import keyboard
-from modelos import *
+# from modelos import Datos, Configuracion, Loss
 import datetime
 
 HOST = '0.0.0.0'  # Escucha en todas las interfaces disponibles
@@ -32,12 +32,12 @@ def on_press(key):
     if k in ['0', '1', '2', '3', '4', 't', 'u']:  # keys of interest
         print('Key pressed: ' + k)
         PRESSED_KEY = k
-        if k == 't':
-            Configuracion.set_Transport_layer("TCP")
-        elif k == 'u':
-            Configuracion.set_Transport_layer("UDP")
-        else:
-            Configuracion.set_protocol(k)
+        # if k == 't':
+        #     Configuracion.set_Transport_layer("TCP")
+        # elif k == 'u':
+        #     Configuracion.set_Transport_layer("UDP")
+        # else:
+        #     Configuracion.set_protocol(k)
         
 
 
@@ -121,8 +121,9 @@ def parse_protocol_0(data):
 def parse_protocol_1(data):
     protocol_0 = parse_protocol_0(data)
     timestamp = data[13:17]
-    last_mac_message = Datos.select().where(
-        Datos.MAC == protocol_0['mac']).where(Datos.timestamp_sent != None).order_by(Datos.timestamp_sent.desc()).limit(1)
+    # last_mac_message = Datos.select().where(
+    #     Datos.MAC == protocol_0['mac']).where(Datos.timestamp_sent != None).order_by(Datos.timestamp_sent.desc()).limit(1)
+    last_mac_message = None
     if not last_mac_message:
         timestamp = datetime.datetime.now()
     else:
@@ -226,39 +227,40 @@ def parse_data(data):
         
         if parse_data['msg_len'] != len(data):
             print("Se perdieron", len(data) - parse_data['msg_len'], "bytes")
-            Loss.create(
-                comm_timestamp=(datetime.datetime.now() -
-                                parse_data['timestamp']).total_seconds(),
-                packet_loss=len(data) - parse_data['msg_len']
-            )
+            # Loss.create(
+            #     comm_timestamp=(datetime.datetime.now() -
+            #                     parse_data['timestamp']).total_seconds(),
+            #     packet_loss=len(data) - parse_data['msg_len']
+            # )
+        print(parse_data)
 
-        Datos.create(
-            ID_message = parse_data['id'] if 'id' in parse_data else None,
-            MAC_device = parse_data['mac'] if 'mac' in parse_data else None,
-            Transport_layer = parse_data['Transport_layer'] if 'Transport_layer' in parse_data else None,
-            ID_protocol = parse_data['ID_Protocol'] if 'ID_Protocol' in parse_data else None,
-            Length = parse_data['msg_len'] if 'msg_len' in parse_data else None,
-            Batt_level = parse_data['batt_lvl'] if 'batt_lvl' in parse_data else None,
-            timestamp_sent = parse_data['timestamp'] if 'timestamp' in parse_data else None,
-            temp = parse_data['temp'] if 'temp' in parse_data else None,
-            press = parse_data['press'] if 'press' in parse_data else None,
-            hum = parse_data['hum'] if 'hum' in parse_data else None,
-            co = parse_data['co'] if 'co' in parse_data else None,
+        # Datos.create(
+        #     ID_message = parse_data['id'] if 'id' in parse_data else None,
+        #     MAC_device = parse_data['mac'] if 'mac' in parse_data else None,
+        #     Transport_layer = parse_data['Transport_layer'] if 'Transport_layer' in parse_data else None,
+        #     ID_protocol = parse_data['ID_Protocol'] if 'ID_Protocol' in parse_data else None,
+        #     Length = parse_data['msg_len'] if 'msg_len' in parse_data else None,
+        #     Batt_level = parse_data['batt_lvl'] if 'batt_lvl' in parse_data else None,
+        #     timestamp_sent = parse_data['timestamp'] if 'timestamp' in parse_data else None,
+        #     temp = parse_data['temp'] if 'temp' in parse_data else None,
+        #     press = parse_data['press'] if 'press' in parse_data else None,
+        #     hum = parse_data['hum'] if 'hum' in parse_data else None,
+        #     co = parse_data['co'] if 'co' in parse_data else None,
 
-            RMS = parse_data['rms'] if 'rms' in parse_data else None,
-            Amp_x = parse_data['ampx'] if 'ampx' in parse_data else None,
-            Frec_x = parse_data['freqx'] if 'freqx' in parse_data else None,
-            Amp_y = parse_data['ampy'] if 'ampy' in parse_data else None,
-            Frec_y = parse_data['freqy'] if 'freqy' in parse_data else None,
-            Amp_z = parse_data['ampz'] if 'ampz' in parse_data else None,
-            Frec_z = parse_data['freqz'] if 'freqz' in parse_data else None,
+        #     RMS = parse_data['rms'] if 'rms' in parse_data else None,
+        #     Amp_x = parse_data['ampx'] if 'ampx' in parse_data else None,
+        #     Frec_x = parse_data['freqx'] if 'freqx' in parse_data else None,
+        #     Amp_y = parse_data['ampy'] if 'ampy' in parse_data else None,
+        #     Frec_y = parse_data['freqy'] if 'freqy' in parse_data else None,
+        #     Amp_z = parse_data['ampz'] if 'ampz' in parse_data else None,
+        #     Frec_z = parse_data['freqz'] if 'freqz' in parse_data else None,
 
-            ID_device = parse_data['id'] if 'id' in parse_data else None,
-            MAC = parse_data['mac'] if 'mac' in parse_data else None,
+        #     ID_device = parse_data['id'] if 'id' in parse_data else None,
+        #     MAC = parse_data['mac'] if 'mac' in parse_data else None,
 
-            timestamp_rcv=datetime.datetime.now()
+        #     timestamp_rcv=datetime.datetime.now()
 
-        )
+        # )
         
     except Exception as e:
         print(e)
@@ -290,22 +292,25 @@ def tcp_server():
         print("TCP esperando conexión...")
         conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
 
-        ID_protocol = Configuracion.get_by_id(1).get_ID_protocol()
-        Transport_Layer = Configuracion.get_by_id(1).get_Transport_layer()
-        id_message = len(Configuracion.select())
+        # ID_protocol = Configuracion.get_by_id(1).get_ID_protocol()
+        # Transport_Layer = Configuracion.get_by_id(1).get_Transport_layer()
+        # id_message = len(Configuracion.select())
         # ID_protocol, Transport_Layer = (3, "UDP") # Aquí se debe hacer la consulta a la base de datos, también un id para el mensaje
+        ID_protocol = 0
+        Transport_Layer = "TCP"
+        id_message = 1
 
         # Se le envia al microcontrolador el protocolo y el tipo de transporte
         coded_message = f"{ID_protocol}:{Transport_Layer}:{id_message}"
         print("Enviado: ", coded_message)
         conn.sendall(coded_message.encode('utf-8'))
 
-        Logs.create(
-            ID_device=str(addr),
-            Transport_Layer=Transport_Layer,
-            Protocol=ID_protocol,
-            timestamp=datetime.datetime.now()
-        )
+        # Logs.create(
+        #     ID_device=str(addr),
+        #     Transport_Layer=Transport_Layer,
+        #     Protocol=ID_protocol,
+        #     timestamp=datetime.datetime.now()
+        # )
 
         if Transport_Layer == "UDP":
             print("La conexión es UDP, cerrando conexión TCP...")
@@ -327,29 +332,30 @@ def tcp_server():
         parse_data(data)
         conn.close()
 
+def socket_server():
+        
+    try:
+        t1 = threading.Thread(target=tcp_server)
+        # t2 = threading.Thread(target=udp_conn)
+        t1.start()
+        # t2.start()
+        while True:
+            pass
 
-try:
-    t1 = threading.Thread(target=tcp_server)
-    t2 = threading.Thread(target=udp_conn)
-    t1.start()
-    t2.start()
-    while True:
-        pass
-
-except Exception as e:
-    print(e)
-    socketTCP.close()
-    socketUDP.close()
-except KeyboardInterrupt:
-    print("Cerrando el servidor...")
+    except Exception as e:
+        print(e)
+        socketTCP.close()
+        socketUDP.close()
+    except KeyboardInterrupt:
+        print("Cerrando el servidor...")
 
 
-    socketTCP.close()
-    socketUDP.close()
+        socketTCP.close()
+        socketUDP.close()
 
-    t1.join()
-    t2.join()
+        t1.join()
+        # t2.join()
 
-finally:
-    socketTCP.close()
-    socketUDP.close()
+    finally:
+        socketTCP.close()
+        socketUDP.close()
