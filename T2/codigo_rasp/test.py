@@ -103,7 +103,7 @@ async def main():
         index += 1
         print(f"Intento de conexión {index}")
         # await connect(ESP32_1_MAC_ADDRESS)
-        # async with BleakClient(ESP32_1_MAC_ADDRESS) as client:
+        async with BleakClient(ESP32_1_MAC_ADDRESS) as client:
             # char_value = await client.read_gatt_char(CHARACTERISTIC_UUID_2)
             # print(f"Characteristic value (bytearray): {char_value}")
 
@@ -118,17 +118,17 @@ async def main():
             # await client.write_gatt_char(CHARACTERISTIC_UUID, data)
             # print(f"Data written to characteristic {CHARACTERISTIC_UUID_2}")
             
-            #
-            # for key, char_uuid in CHARACTERISTICS.items():
-            #     value = config_param[key]
-            #     print(f"Setting characteristic {key} to {value}")
-            #     bytearray_value = bytearray([value])
-            #     await client.write_gatt_char(char_uuid, bytearray_value)
-            #     print(f"Characteristic {key} value set to {value}")
-            #     char_value = await client.read_gatt_char(char_uuid)
-            #     print(f"Characteristic {key} value: {char_value}")
+            
+            for key, char_uuid in CHARACTERISTICS.items():
+                value = config_param[key]
+                print(f"Setting characteristic {key} to {value}")
+                bytearray_value = bytearray([value])
+                await client.write_gatt_char(char_uuid, bytearray_value)
+                print(f"Characteristic {key} value set to {value}")
+                char_value = await client.read_gatt_char(char_uuid)
+                print(f"Characteristic {key} value: {char_value}")
 
-        socket_server()
+            socket_server()
 
     except KeyboardInterrupt:
         print("Programa terminado")

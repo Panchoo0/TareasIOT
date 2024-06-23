@@ -1,42 +1,30 @@
 
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "esp_system.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "esp_bt.h"
 
-#include <stdio.h>
-#include <string.h>
-
-#include "esp_event.h"
 #include "esp_sleep.h"
 #include "esp_wifi.h"
-#include "lwip/err.h"
-#include "lwip/sys.h"
 #include "lwip/sockets.h" // Para sockets
 
-#include <sys/time.h>
 #include <math.h>
 #include "esp_mac.h"
-#include "esp_sntp.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "esp_gap_ble_api.h"
 #include "esp_gatts_api.h"
 #include "esp_bt_main.h"
-#include "esp_bt_device.h"
 #include "esp_gatt_common_api.h"
+
+#include "gen_data.h"
+#include "wifi_server.h"
+#include "nvs_func.h"
 
 #define GATTS_TABLE_TAG "GATTS_TABLE_DEMO"
 
 #define WIFI_SSID "TeoyKala 2.4"
 #define WIFI_PASSWORD "208470701G"
-#define SERVER_IP "192.168.1.92" // IP del servidor
+#define SERVER_IP "192.168.1.83" // IP del servidor
 #define SERVER_PORT 1234
 #define SERVER_UDP_PORT 1235
 
@@ -64,8 +52,6 @@ static EventGroupHandle_t s_wifi_event_group;
 #define SCAN_RSP_CONFIG_FLAG (1 << 1)
 
 static uint8_t adv_config_done = 0;
-
-void socket_tcp();
 
 enum
 {
@@ -223,150 +209,6 @@ struct gatts_profile_inst
     uint16_t descr_handle;
     esp_bt_uuid_t descr_uuid;
 };
-
-int Write_NVS(int32_t data, int key)
-{
-    // Initialize NVS
-    esp_err_t err = nvs_flash_init();
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES)
-    {
-        // NVS partition was truncated and needs to be erased
-        // Retry nvs_flash_init
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        err = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(err);
-
-    // Open
-    // printf("Opening NVS .. ");
-    nvs_handle_t my_handle;
-    err = nvs_open("Storage", NVS_READWRITE, &my_handle);
-    if (err != ESP_OK)
-    {
-        printf("Error (%d) opening NVS handle!\n", err);
-        return -1;
-    }
-    else
-    {
-        // printf("Done\n");
-        // // Write
-        // printf("Updating restart counter in NVS ... ");
-        switch (key)
-        {
-        case 1:
-            printf("status\n");
-            err = nvs_set_i32(my_handle, "status", data);
-            break;
-        case 2:
-            err = nvs_set_i32(my_handle, "Samp_Freq", data);
-            break;
-        case 3:
-            err = nvs_set_i32(my_handle, "T_s", data);
-            break;
-        case 4:
-            err = nvs_set_i32(my_handle, "Acc_Sen", data);
-            break;
-        case 5:
-            err = nvs_set_i32(my_handle, "Gyro_Sen", data);
-            break;
-        case 6:
-            err = nvs_set_i32(my_handle, "Acc_Any", data);
-            break;
-        case 7:
-            err = nvs_set_i32(my_handle, "Rf_Cal", data);
-            break;
-        case 8:
-            err = nvs_set_i32(my_handle, "SEL_ID", data);
-            break;
-
-        default:
-            printf("ERROR key");
-            break;
-        }
-        printf((err != ESP_OK) ? "Failed in NVS!\n" : "Done\n");
-        // printf("Committing updates in NVS ... ");
-        err = nvs_commit(my_handle);
-        printf((err != ESP_OK) ? "Failed!\n" : "Done\n");
-        // Close
-        nvs_close(my_handle);
-    }
-    fflush(stdout);
-    return 0;
-}
-
-int Read_NVS(int32_t *data, int key)
-{
-    // Initialize NVS
-    esp_err_t err = nvs_flash_init();
-    ESP_ERROR_CHECK(err);
-
-    // Open
-    // printf("\n");
-    // printf("Opening Non-Volatile Storage (NVS) handle... ");
-    nvs_handle_t my_handle;
-    err = nvs_open("Storage", NVS_READWRITE, &my_handle);
-    if (err != ESP_OK)
-    {
-        printf("Error (%d) opening NVS handle!\n", err);
-        return -1;
-    }
-    else
-    {
-        // printf("Done\n");
-
-        // // Read
-        // printf("Reading from NVS ... ");
-        switch (key)
-        {
-        case 1:
-            err = nvs_get_i32(my_handle, "status", data);
-            break;
-        case 2:
-            err = nvs_get_i32(my_handle, "Samp_Freq", data);
-            break;
-        case 3:
-            err = nvs_get_i32(my_handle, "T_s", data);
-            break;
-        case 4:
-            err = nvs_get_i32(my_handle, "Acc_Sen", data);
-            break;
-        case 5:
-            err = nvs_get_i32(my_handle, "Gyro_Sen", data);
-            break;
-        case 6:
-            err = nvs_get_i32(my_handle, "Acc_Any", data);
-            break;
-        case 7:
-            err = nvs_get_i32(my_handle, "Rf_Cal", data);
-            break;
-        case 8:
-            err = nvs_get_i32(my_handle, "SEL_ID", data);
-            break;
-
-        default:
-            printf("ERROR key");
-            break;
-        }
-        switch (err)
-        {
-        case ESP_OK:
-            // printf("Done\n");
-            //  printf("Value Data = %d\n", *data);
-            break;
-        case ESP_ERR_NVS_NOT_FOUND:
-            printf("The value is not initialized yet!\n");
-            break;
-        default:
-            printf("Error (%d) reading!\n", err);
-        }
-        // printf("Committing updates in NVS ... ");
-        printf((err != ESP_OK) ? "Failed!\n" : "Done\n");
-        // Close
-        nvs_close(my_handle);
-    }
-    fflush(stdout);
-    return 0;
-}
 
 static void gatts_profile_event_handler(esp_gatts_cb_event_t event,
                                         esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
@@ -746,13 +588,91 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
             // the data length of gattc write  must be less than GATTS_DEMO_CHAR_VAL_LEN_MAX.
             ESP_LOGI(GATTS_TABLE_TAG, "GATT_WRITE_EVT, handle = %d, value len = %d, value :", param->write.handle, param->write.len);
             ESP_LOG_BUFFER_HEX(GATTS_TABLE_TAG, param->write.value, param->write.len);
-            ESP_LOGI(GATTS_TABLE_TAG, "EXPECTED IDX: %d", heart_rate_handle_table[IDX_CHAR_PASS]);
-            ESP_LOGI(GATTS_TABLE_TAG, "EXPECTED IDX_CHAR_VAL_PASS: %d", heart_rate_handle_table[IDX_CHAR_VAL_PASS]);
 
-            if (heart_rate_handle_table[IDX_CHAR_VAL_PASS] == param->write.handle && param->write.len == 1)
+            if (heart_rate_handle_table[IDX_CHAR_VAL_STATUS] == param->write.handle && param->write.len == 1)
             {
-                int32_t data = {1};
+                int32_t data = {param->write.value[0]};
                 Write_NVS(data, 1);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_ID_PROTOCOL] == param->write.handle && param->write.len == 1)
+            {
+                int32_t data = {param->write.value[0]};
+                Write_NVS(data, 2);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_BMI270_SAMPLING] == param->write.handle && param->write.len == 4)
+            {
+                int32_t data = param->write.value[0] << 24 | param->write.value[1] << 16 | param->write.value[2] << 8 | param->write.value[3];
+                Write_NVS(data, 3);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_BMI270_ACC] == param->write.handle && param->write.len == 4)
+            {
+                int32_t data = param->write.value[0] << 24 | param->write.value[1] << 16 | param->write.value[2] << 8 | param->write.value[3];
+                Write_NVS(data, 4);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_BMI270_GYR] == param->write.handle && param->write.len == 4)
+            {
+                int32_t data = param->write.value[0] << 24 | param->write.value[1] << 16 | param->write.value[2] << 8 | param->write.value[3];
+                Write_NVS(data, 5);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_BMI688_SAMPLING] == param->write.handle && param->write.len == 4)
+            {
+                int32_t data = param->write.value[0] << 24 | param->write.value[1] << 16 | param->write.value[2] << 8 | param->write.value[3];
+                Write_NVS(data, 6);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_DISCONTINUOUS_TIME] == param->write.handle && param->write.len == 4)
+            {
+                int32_t data = param->write.value[0] << 24 | param->write.value[1] << 16 | param->write.value[2] << 8 | param->write.value[3];
+                Write_NVS(data, 7);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_PORT_TCP] == param->write.handle && param->write.len == 4)
+            {
+                int32_t data = param->write.value[0] << 24 | param->write.value[1] << 16 | param->write.value[2] << 8 | param->write.value[3];
+                Write_NVS(data, 8);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_PORT_UDP] == param->write.handle && param->write.len == 4)
+            {
+                int32_t data = param->write.value[0] << 24 | param->write.value[1] << 16 | param->write.value[2] << 8 | param->write.value[3];
+                Write_NVS(data, 9);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_HOST_IP] == param->write.handle && param->write.len == 4)
+            {
+                int32_t data = param->write.value[0] << 24 | param->write.value[1] << 16 | param->write.value[2] << 8 | param->write.value[3];
+                Write_NVS(data, 10);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_SSID] == param->write.handle && param->write.len <= 16)
+            {
+                size_t num_ints = param->write.len / 4;
+
+                uint32_t data[4];
+                // Copy the data from param->write.value to our buffer
+                for (size_t i = 0; i < num_ints; ++i)
+                {
+                    data[i] = (param->write.value[i * 4] << 24) |
+                              (param->write.value[i * 4 + 1] << 16) |
+                              (param->write.value[i * 4 + 2] << 8) |
+                              (param->write.value[i * 4 + 3]);
+                }
+                Write_NVS(*data, 11);
+            }
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_PASS] == param->write.handle && param->write.len <= 16)
+            {
+                size_t num_ints = param->write.len / 4;
+
+                uint32_t data[4];
+                // Copy the data from param->write.value to our buffer
+                for (size_t i = 0; i < num_ints; ++i)
+                {
+                    data[i] = (param->write.value[i * 4] << 24) |
+                              (param->write.value[i * 4 + 1] << 16) |
+                              (param->write.value[i * 4 + 2] << 8) |
+                              (param->write.value[i * 4 + 3]);
+                }
+                Write_NVS(data, 12);
+                esp_deep_sleep(100000);
+            }
+            else
+            {
+                ESP_LOGI(GATTS_TABLE_TAG, "NO MATCH");
             }
         }
         break;
@@ -855,542 +775,6 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
     } while (0);
 }
 
-u_char gen_batt_lvl()
-{
-    return (u_char)rand() % 100;
-}
-
-int gen_tmp()
-{
-    return (rand() % 25) + 5;
-}
-
-float gen_rand_float(float range, int min)
-{
-    return ((float)rand() / (float)(RAND_MAX / range)) + min;
-}
-int gen_hum()
-{
-    return (rand() % 50) + 30;
-}
-
-int gen_pres()
-{
-    return (rand() % 200) + 1000;
-}
-
-float gen_co()
-{
-    return gen_rand_float(170, 30);
-}
-
-float gen_ampx()
-{
-    return gen_rand_float(0.12 - 0.0059, 0.0059);
-}
-
-float gen_ampy()
-{
-    return gen_rand_float(0.11 - 0.0041, 0.0041);
-}
-
-float gen_ampz()
-{
-    return gen_rand_float(0.15 - 0.008, 0.008);
-}
-
-float gen_freqx()
-{
-    return gen_rand_float(2, 29);
-}
-
-float gen_freqy()
-{
-    return gen_rand_float(2, 59);
-}
-
-float gen_freqz()
-{
-    return gen_rand_float(2, 89);
-}
-
-float rms(float x, float y, float z)
-{
-    return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-}
-
-void acc(int *data)
-{
-    for (int i = 0; i < 2000; i++)
-    {
-        float num = gen_rand_float(32, -16);
-        data[i] = *((int *)&num);
-    }
-}
-
-void rgyro(int *data)
-{
-    for (int i = 0; i < 2000; i++)
-    {
-        float num = gen_rand_float(2000, -1000);
-        data[i] = *((int *)&num);
-    }
-}
-
-void mac(uint8_t *base_mac_addr)
-{
-    esp_read_mac(base_mac_addr, ESP_MAC_WIFI_STA);
-}
-
-void set_headers(char *headers, char *ID_protocol, char *Transport_Layer)
-{
-    short id = 0;
-    uint8_t base_mac_addr[6] = {0};
-    mac(base_mac_addr);
-    headers[0] = (char)id >> 8;
-    headers[1] = (char)id & 0xFF;
-    headers[2] = base_mac_addr[0];
-    headers[3] = base_mac_addr[1];
-    headers[4] = base_mac_addr[2];
-    headers[5] = base_mac_addr[3];
-    headers[6] = base_mac_addr[4];
-    headers[7] = base_mac_addr[5];
-    printf("MAC: %02x:%02x:%02x:%02x:%02x:%02x\n", base_mac_addr[0], base_mac_addr[1], base_mac_addr[2], base_mac_addr[3], base_mac_addr[4], base_mac_addr[5]);
-
-    if (strcmp(Transport_Layer, "UDP") == 0)
-    {
-        headers[8] = 0;
-    }
-    else
-    {
-        headers[8] = 1;
-    }
-
-    headers[9] = (char)atoi(ID_protocol);
-    printf("ID Protocol: %d\n", headers[9]);
-}
-
-void set_protocol_0(char *message, char *ID_protocol, char *Transport_Layer)
-{
-    message[10] = 0;                    // Tamaño del mensaje
-    message[11] = 13;                   // Tamano del mensaje
-    message[12] = (char)gen_batt_lvl(); // batt lvl
-    printf("Batt lvl: %d\n", message[12]);
-    set_headers(message, ID_protocol, Transport_Layer);
-}
-
-void set_protocol_1(char *message, char *ID_protocol, char *Transport_Layer)
-{
-    set_headers(message, ID_protocol, Transport_Layer);
-    set_protocol_0(message, ID_protocol, Transport_Layer);
-
-    message[10] = 0;  // Tamaño del mensaje
-    message[11] = 17; // Tamano del mensaje
-
-    // Agregar timestamp --> gettimeofday() <--
-    message[13] = 0;
-    message[14] = 0;
-    message[15] = 0;
-    message[16] = 0;
-}
-
-void set_protocol_2(char *message, char *ID_protocol, char *Transport_Layer)
-{
-    set_headers(message, ID_protocol, Transport_Layer);
-    set_protocol_1(message, ID_protocol, Transport_Layer);
-
-    message[10] = 0;  // Tamaño del mensaje
-    message[11] = 27; // Tamano del mensaje
-
-    message[17] = (char)gen_tmp(); // temp
-    printf("Temperatura: %d\n", message[17]);
-    int press = gen_pres();
-    printf("Presion: %i\n", press);
-
-    message[18] = (char)(press >> 24 & 0xFF);
-    message[19] = (char)(press >> 16 & 0xFF);
-    message[20] = (char)(press >> 8 & 0xFF);
-    message[21] = (char)(press & 0xFF);
-
-    message[22] = (char)gen_hum(); // hum
-    printf("Humedad: %d\n", message[22]);
-    float fco = gen_co();
-    int co = *((int *)&fco);
-    message[23] = (char)(co >> 24 & 0xFF);
-    message[24] = (char)(co >> 16 & 0xFF);
-    message[25] = (char)(co >> 8 & 0xFF);
-    message[26] = (char)(co & 0xFF);
-    printf("CO: %f\n", fco);
-}
-
-void set_protocol_3(char *message, char *ID_protocol, char *Transport_Layer)
-{
-    set_headers(message, ID_protocol, Transport_Layer);
-    set_protocol_2(message, ID_protocol, Transport_Layer);
-
-    message[10] = 0;  // Tamaño del mensaje
-    message[11] = 55; // Tamano del mensaje
-
-    float fampx = gen_ampx();
-    float fampy = gen_ampy();
-    float fampz = gen_ampz();
-
-    printf("fampx: %f\n", fampx);
-    printf("fampy: %f\n", fampy);
-    printf("fampz: %f\n", fampz);
-
-    float ffreqx = gen_freqx();
-    float ffreqy = gen_freqy();
-    float ffreqz = gen_freqz();
-
-    printf("ffreqx: %f\n", ffreqx);
-    printf("ffreqy: %f\n", ffreqy);
-    printf("ffreqz: %f\n", ffreqz);
-
-    int ampx = *((int *)&fampx);
-    int ampy = *((int *)&fampy);
-    int ampz = *((int *)&fampz);
-
-    int freqx = *((int *)&ffreqx);
-    int freqy = *((int *)&ffreqy);
-    int freqz = *((int *)&ffreqz);
-
-    float frms = rms(fampx, fampy, fampz);
-    int rms = *((int *)&frms);
-
-    printf("fampx as int: %d\n", ampx);
-
-    printf("RMS: %f\n", frms);
-
-    message[27] = (char)(rms >> 24 & 0xFF);
-    message[28] = (char)(rms >> 16 & 0xFF);
-    message[29] = (char)(rms >> 8 & 0xFF);
-    message[30] = (char)(rms & 0xFF);
-
-    message[31] = (char)(ampx >> 24 & 0xFF);
-    message[32] = (char)(ampx >> 16 & 0xFF);
-    message[33] = (char)(ampx >> 8 & 0xFF);
-    message[34] = (char)(ampx & 0xFF);
-
-    message[35] = (char)(freqx >> 24 & 0xFF);
-    message[36] = (char)(freqx >> 16 & 0xFF);
-    message[37] = (char)(freqx >> 8 & 0xFF);
-    message[38] = (char)(freqx & 0xFF);
-
-    message[39] = (char)(ampy >> 24 & 0xFF);
-    message[40] = (char)(ampy >> 16 & 0xFF);
-    message[41] = (char)(ampy >> 8 & 0xFF);
-    message[42] = (char)(ampy & 0xFF);
-
-    message[43] = (char)(freqy >> 24 & 0xFF);
-    message[44] = (char)(freqy >> 16 & 0xFF);
-    message[45] = (char)(freqy >> 8 & 0xFF);
-    message[46] = (char)(freqy & 0xFF);
-
-    message[47] = (char)(ampz >> 24 & 0xFF);
-    message[48] = (char)(ampz >> 16 & 0xFF);
-    message[49] = (char)(ampz >> 8 & 0xFF);
-    message[50] = (char)(ampz & 0xFF);
-
-    message[51] = (char)(freqz >> 24 & 0xFF);
-    message[52] = (char)(freqz >> 16 & 0xFF);
-    message[53] = (char)(freqz >> 8 & 0xFF);
-    message[54] = (char)(freqz & 0xFF);
-}
-
-void print_first_20(int *data)
-{
-    for (int i = 0; i < 20; i++)
-    {
-        float num = *((float *)&data[i]);
-        printf("%f ", num);
-    }
-    printf("\n");
-}
-
-void set_protocol_4(char *message, char *ID_protocol, char *Transport_Layer)
-{
-    set_headers(message, ID_protocol, Transport_Layer);
-    set_protocol_2(message, ID_protocol, Transport_Layer);
-
-    int size = 48027;
-    message[10] = (char)(size >> 8 & 0xFF);
-    message[11] = (char)(size & 0xFF);
-
-    int *acc_x = malloc(2000 * sizeof(int));
-    int *acc_y = malloc(2000 * sizeof(int));
-    int *acc_z = malloc(2000 * sizeof(int));
-
-    acc(acc_x);
-    acc(acc_y);
-    acc(acc_z);
-
-    int *gyro_x = malloc(2000 * sizeof(int));
-    int *gyro_y = malloc(2000 * sizeof(int));
-    int *gyro_z = malloc(2000 * sizeof(int));
-
-    rgyro(gyro_x);
-    rgyro(gyro_y);
-    rgyro(gyro_z);
-
-    for (int i = 0; i < 2000; i++)
-    {
-        message[27 + i * 4] = (char)(acc_x[i] >> 24 & 0xFF);
-        message[27 + i * 4 + 1] = (char)(acc_x[i] >> 16 & 0xFF);
-        message[27 + i * 4 + 2] = (char)(acc_x[i] >> 8 & 0xFF);
-        message[27 + i * 4 + 3] = (char)(acc_x[i] & 0xFF);
-
-        message[27 + 8000 + i * 4] = (char)(acc_y[i] >> 24 & 0xFF);
-        message[27 + 8000 + i * 4 + 1] = (char)(acc_y[i] >> 16 & 0xFF);
-        message[27 + 8000 + i * 4 + 2] = (char)(acc_y[i] >> 8 & 0xFF);
-        message[27 + 8000 + i * 4 + 3] = (char)(acc_y[i] & 0xFF);
-
-        message[27 + 16000 + i * 4] = (char)(acc_z[i] >> 24 & 0xFF);
-        message[27 + 16000 + i * 4 + 1] = (char)(acc_z[i] >> 16 & 0xFF);
-        message[27 + 16000 + i * 4 + 2] = (char)(acc_z[i] >> 8 & 0xFF);
-        message[27 + 16000 + i * 4 + 3] = (char)(acc_z[i] & 0xFF);
-
-        message[27 + 24000 + i * 4] = (char)(gyro_x[i] >> 24 & 0xFF);
-        message[27 + 24000 + i * 4 + 1] = (char)(gyro_x[i] >> 16 & 0xFF);
-        message[27 + 24000 + i * 4 + 2] = (char)(gyro_x[i] >> 8 & 0xFF);
-        message[27 + 24000 + i * 4 + 3] = (char)(gyro_x[i] & 0xFF);
-
-        message[27 + 32000 + i * 4] = (char)(gyro_y[i] >> 24 & 0xFF);
-        message[27 + 32000 + i * 4 + 1] = (char)(gyro_y[i] >> 16 & 0xFF);
-        message[27 + 32000 + i * 4 + 2] = (char)(gyro_y[i] >> 8 & 0xFF);
-        message[27 + 32000 + i * 4 + 3] = (char)(gyro_y[i] & 0xFF);
-    }
-
-    free(acc_x);
-    free(acc_y);
-    free(acc_z);
-    free(gyro_x);
-    free(gyro_y);
-    free(gyro_z);
-}
-
-int get_procotol_length(char *ID_protocol)
-{
-    if (strcmp(ID_protocol, "0") == 0)
-    {
-        return 13;
-    }
-    else if (strcmp(ID_protocol, "1") == 0)
-    {
-        return 17;
-    }
-    else if (strcmp(ID_protocol, "2") == 0)
-    {
-        return 27;
-    }
-    else if (strcmp(ID_protocol, "3") == 0)
-    {
-        return 55;
-    }
-    else if (strcmp(ID_protocol, "4") == 0)
-    {
-        return 48027;
-    }
-    return 0;
-}
-
-char *set_message(char *ID_protocol, char *Transport_Layer, char *ID_message)
-{
-    char *message = NULL;
-    if (strcmp(ID_protocol, "0") == 0)
-    {
-        message = (char *)malloc(13 * sizeof(char));
-        set_protocol_0(message, ID_protocol, Transport_Layer);
-    }
-    else if (strcmp(ID_protocol, "1") == 0)
-    {
-        message = (char *)malloc(17 * sizeof(char));
-        set_protocol_1(message, ID_protocol, Transport_Layer);
-    }
-    else if (strcmp(ID_protocol, "2") == 0)
-    {
-        message = (char *)malloc(27 * sizeof(char));
-        set_protocol_2(message, ID_protocol, Transport_Layer);
-    }
-    else if (strcmp(ID_protocol, "3") == 0)
-    {
-        message = (char *)malloc(55 * sizeof(char));
-        set_protocol_3(message, ID_protocol, Transport_Layer);
-    }
-    else if (strcmp(ID_protocol, "4") == 0)
-    {
-        printf("Protocolo 4\n");
-        message = (char *)malloc(48027 * sizeof(char));
-        printf("Creado arreglo \n");
-        set_protocol_4(message, ID_protocol, Transport_Layer);
-    }
-    int id = atoi(ID_message);
-    message[0] = (char)id >> 8;
-    message[1] = (char)id & 0xFF;
-    printf("ID message %d\n", id);
-
-    return message;
-}
-
-int udp_conn(char *ID_protocol, char *Transport_Layer, char *ID_message)
-{
-    struct sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_UDP_PORT);
-    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
-
-    // Crear un socket
-    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (sock < 0)
-    {
-        ESP_LOGE(TAG, "Error al crear el socket");
-        return 0;
-    }
-
-    char *message = set_message(ID_protocol, Transport_Layer, ID_message);
-    int size = get_procotol_length(ID_protocol);
-
-    ESP_LOGI(TAG, "Largo %d\n", size);
-
-    struct timeval timeout;
-    timeout.tv_sec = 5;
-    timeout.tv_usec = 0;
-
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
-    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof timeout);
-
-    sendto(sock, message, size, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
-    ESP_LOGI(TAG, "Se enviaron los datos");
-
-    char rx_buffer[128];
-    rx_buffer[0] = '\0';
-    int rx_len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, NULL, NULL);
-    rx_buffer[rx_len] = '\0';
-    ESP_LOGI(TAG, "Datos recibidos (%d): %s\n", rx_len, rx_buffer);
-    close(sock);
-    if (rx_len < 0)
-    {
-    }
-    else if (strcmp(rx_buffer, "TCP") == 0)
-    {
-        rx_buffer[rx_len] = '\0';
-        ESP_LOGI(TAG, "Cambiando a Protocolo TCP\n");
-        return 1;
-    }
-
-    return 0;
-}
-
-void socket_udp(char *ID_protocol, char *Transport_Layer, char *ID_message)
-{
-    while (udp_conn(ID_protocol, Transport_Layer, ID_message) == 0)
-    {
-    }
-    esp_deep_sleep(10000000);
-    return;
-}
-
-void socket_tcp()
-{
-    struct sockaddr_in server_addr;
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
-    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
-
-    // Crear un socket
-    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock < 0)
-    {
-        ESP_LOGE(TAG, "Error al crear el socket");
-        esp_deep_sleep(10000000);
-        return;
-    }
-
-    // Conectar al servidor
-    if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) != 0)
-    {
-        ESP_LOGE(TAG, "Error al conectar");
-        close(sock);
-        esp_deep_sleep(10000000);
-        return;
-    }
-
-    ESP_LOGI(TAG, "Esperando a recibir los datos\n");
-    char rx_buffer[128];
-    int rx_len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
-    if (rx_len < 0)
-    {
-        ESP_LOGE(TAG, "Error al recibir datos\n");
-        esp_deep_sleep(10000000);
-        return;
-    }
-    ESP_LOGI(TAG, "Datos recibidos: %s\n", rx_buffer);
-    rx_buffer[rx_len] = 0;
-    char *tokens = strtok(rx_buffer, ":");
-
-    char *ID_protocol = tokens;
-    tokens = strtok(NULL, ":");
-    char *Transport_Layer = tokens;
-    tokens = strtok(NULL, ":");
-    char *ID_message = tokens;
-
-    if (strcmp(Transport_Layer, "UDP") == 0)
-    {
-        close(sock);
-        ESP_LOGI(TAG, "Protocolo UDP\n");
-        return socket_udp(ID_protocol, Transport_Layer, ID_message);
-    }
-
-    ESP_LOGI(TAG, "Protocolo TCP\n");
-    ESP_LOGI(TAG, "Protocolo %s\n", ID_protocol);
-
-    char *message = set_message(ID_protocol, Transport_Layer, ID_message);
-    int size = get_procotol_length(ID_protocol);
-
-    ESP_LOGI(TAG, "Largo %d\n", size);
-
-    if (size > 1000)
-    {
-        int sizeToSend = size;
-        for (int i = 0; i < size; i += 1000)
-        {
-            if (sizeToSend < 1000)
-            {
-                int r = send(sock, message + i, sizeToSend, 0);
-                if (r < 0)
-                {
-                    ESP_LOGE(TAG, "ERROR AL ENVIAR DATOS");
-                    continue;
-                }
-                ESP_LOGI(TAG, "Se envió %d bytes\n", r);
-                break;
-            }
-            int r = send(sock, message + i, 1000, 0);
-            if (r < 0)
-            {
-                ESP_LOGE(TAG, "ERROR AL ENVIAR DATOS");
-                continue;
-            }
-            sizeToSend -= 1000;
-            ESP_LOGI(TAG, "Se envió %d bytes\n", r);
-        }
-    }
-    else
-    {
-        int r = send(sock, message, size, 0);
-    }
-
-    ESP_LOGI(TAG, "Se enviaron los datos\n");
-    free(message);
-
-    close(sock);
-
-    // esp_deep_sleep_enable_timer_wakeup(60000000); // 10000000 us = 10 s
-
-    // esp_deep_sleep_start();
-    esp_deep_sleep(10000000);
-}
-
 void app_main(void)
 {
     esp_err_t ret;
@@ -1404,13 +788,29 @@ void app_main(void)
     }
     ESP_ERROR_CHECK(ret);
 
+    int32_t status[1] = {-1};
+    Read_NVS(status, 1);
+    ESP_LOGI(TAG, "Status: %ld\n", status[0]);
+
+    if (status[0] == 20)
+    {
+        wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
+        ESP_LOGI(TAG, "Conectado a WiFi!\n");
+        tcp_conf();
+        return;
+    }
+
+    if (status[0] == 21 || status[0] == 22)
+    {
+        wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
+        ESP_LOGI(TAG, "Conectado a WiFi!\n");
+        srand(time(NULL));
+
+        socket_tcp();
+        return;
+    }
+
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
-    wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
-    ESP_LOGI(TAG, "Conectado a WiFi!\n");
-    srand(time(NULL));
-
-    socket_tcp();
-
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     ret = esp_bt_controller_init(&bt_cfg);
     if (ret)
