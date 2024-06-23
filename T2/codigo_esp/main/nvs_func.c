@@ -56,16 +56,6 @@ int Write_NVS(int32_t data, int key)
         case 9:
             err = nvs_set_i32(my_handle, "port_udp", data);
             break;
-        case 10:
-            err = nvs_set_i32(my_handle, "host_ip", data);
-            break;
-        case 11:
-            err = nvs_set_i32(my_handle, "ssid", data);
-            break;
-        case 12:
-            err = nvs_set_i32(my_handle, "pass", data);
-            break;
-
         default:
             printf("ERROR key");
             break;
@@ -81,7 +71,7 @@ int Write_NVS(int32_t data, int key)
     return 0;
 }
 
-char Write_NVS_string(char *data, int key)
+char Write_NVS_string(char *data,int len, int key)
 {
     // Initialize NVS
     esp_err_t err = nvs_flash_init();
@@ -105,20 +95,52 @@ char Write_NVS_string(char *data, int key)
     }
     else
     {
-        // printf("Done\n");
-        // // Write
-        // printf("Updating restart counter in NVS ... ");
         switch (key)
         {
         case 10:
-            err = nvs_set_str(my_handle, "host_ip", data);
+            err = nvs_set_i32(my_handle, "host_ip", (int32_t) len);
+            for (int i = 0; i < len; i++)
+            {
+                char name[20];
+                sprintf(name, "host_ip_%d", i);
+                err = nvs_set_i32(my_handle, name, (int32_t) data[i]);
+                if (err != ESP_OK)
+                {
+                    printf("Error (%d) writing!\n", err);
+                    break;
+                }
+            }
             break;
         case 11:
-            err = nvs_set_str(my_handle, "ssid", data);
+            err = nvs_set_i32(my_handle, "ssid", (int32_t) len);
+            for (int i = 0; i < len; i++)
+            {
+                char name[20];
+                sprintf(name, "ssid_%d", i);
+                err = nvs_set_i32(my_handle, name, (int32_t) data[i]);
+                if (err != ESP_OK)
+                {
+                    printf("Error (%d) writing!\n", err);
+                    break;
+                }
+              
+            }
             break;
         case 12:
-            err = nvs_set_str(my_handle, "pass", data);
+            err = nvs_set_i32(my_handle, "pass", (int32_t) len);
+            for (int i = 0; i < len; i++)
+            {
+                char name[20];
+                sprintf(name, "pass_%d", i);
+                err = nvs_set_i32(my_handle, name, (int32_t) data[i]);
+                if (err != ESP_OK)
+                {
+                    printf("Error (%d) writing!\n", err);
+                    break;
+                }
+            }
             break;
+
         default:
             printf("ERROR key");
             break;
@@ -221,4 +243,101 @@ int Read_NVS(int32_t *data, int key)
     }
     fflush(stdout);
     return 0;
+}
+
+int Read_NVS_string(char *data, int len, int key)
+{
+    // Initialize NVS
+    esp_err_t err = nvs_flash_init();
+    ESP_ERROR_CHECK(err);
+    int read_count = 0;
+
+    // Open
+    // printf("\n");
+    // printf("Opening Non-Volatile Storage (NVS) handle... ");
+    nvs_handle_t my_handle;
+    err = nvs_open("Storage", NVS_READWRITE, &my_handle);
+    if (err != ESP_OK)
+    {
+        printf("Error (%d) opening NVS handle!\n", err);
+        return -1;
+    }
+    else
+    {
+        // printf("Done\n");
+
+        // // Read
+        // printf("Reading from NVS ... ");
+        int val_len;
+        switch (key)
+        {
+        case 10:
+            err = nvs_get_i32(my_handle, "host_ip", &val_len);
+            for (int i = 0; i < val_len; i++)
+            {
+                char name[20];
+                sprintf(name, "host_ip_%d", i);
+                err = nvs_get_i32(my_handle, name, &data[i]);
+                if (err != ESP_OK)
+                {
+                    printf("Error (%d) reading!\n", err);
+                    break;
+                }
+                read_count++;
+            }
+            break;
+        case 11:
+            err = nvs_get_i32(my_handle, "ssid", &val_len);
+            for (int i = 0; i < val_len; i++)
+            {
+                char name[20];
+                sprintf(name, "ssid_%d", i);
+                err = nvs_get_i32(my_handle, name, &data[i]);
+                if (err != ESP_OK)
+                {
+                    printf("Error (%d) reading!\n", err);
+                    break;
+                }
+                read_count++;
+            }
+            break;
+        case 12:
+            err = nvs_get_i32(my_handle, "pass", &val_len);
+            for (int i = 0; i < val_len; i++)
+            {
+                char name[20];
+                sprintf(name, "pass_%d", i);
+                err = nvs_get_i32(my_handle, name, &data[i]);
+                if (err != ESP_OK)
+                {
+                    printf("Error (%d) reading!\n", err);
+                    break;
+                }
+                read_count++;
+            }
+            break;
+
+        default:
+            printf("ERROR key");
+            break;
+        }
+        switch (err)
+        {
+        case ESP_OK:
+            // printf("Done\n");
+            //  printf("Value Data = %d\n", *data);
+            break;
+        case ESP_ERR_NVS_NOT_FOUND:
+            printf("The value is not initialized yet!\n");
+            break;
+        default:
+            printf("Error (%d) reading!\n", err);
+        }
+        // printf("Committing updates in NVS ... ");
+        printf((err != ESP_OK) ? "Failed!\n" : "Done\n");
+        // Close
+        nvs_close(my_handle);
+    }
+    fflush(stdout);
+    return read_count;
 }

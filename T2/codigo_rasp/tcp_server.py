@@ -166,7 +166,38 @@ def parse_data(data):
         print(e)
         return None
 
+class UDP_Server:
+    def __init__(self):
+        self.stop_event = threading.Event()
 
+    def stop_server(self):
+        self.stop_event.set()
+        print("Server stopped")
+
+    def udp_server(self):
+        socketUDP = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        socketUDP.bind((HOST, PORT_UDP))
+
+        while True:
+            try:
+                print("UDP esperando conexión...")
+                data, addr = socketUDP.recvfrom(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
+                print("Recibido (UDP)")
+                parse_data(data)
+                if self.stop_event.is_set():
+                    print("Cerrando conexión")
+                    msg = 'STOP'
+                    socketUDP.sendto(msg.encode('utf-8'), addr)
+                    break
+            except KeyboardInterrupt:
+                print("Cerrando conexión")
+                break
+            except Exception as e:
+                print(e)
+                break
+
+        socketUDP.close()
+        print("SOCKET stopped")
 
 class TCP_Server:
     def __init__(self):

@@ -22,19 +22,6 @@
 
 #define GATTS_TABLE_TAG "GATTS_TABLE_DEMO"
 
-#define WIFI_SSID "TeoyKala 2.4"
-#define WIFI_PASSWORD "208470701G"
-#define SERVER_IP "192.168.1.83" // IP del servidor
-#define SERVER_PORT 1234
-#define SERVER_UDP_PORT 1235
-
-// Variables de WiFi
-#define WIFI_CONNECTED_BIT BIT0
-#define WIFI_FAIL_BIT BIT1
-static const char *TAG = "WIFI";
-static int s_retry_num = 0;
-static EventGroupHandle_t s_wifi_event_group;
-
 #define PROFILE_NUM 1
 #define PROFILE_APP_IDX 0
 #define ESP_APP_ID 0x55
@@ -441,98 +428,6 @@ void example_exec_write_event_env(prepare_type_env_t *prepare_write_env, esp_ble
     prepare_write_env->prepare_len = 0;
 }
 
-void event_handler(void *arg, esp_event_base_t event_base,
-                   int32_t event_id, void *event_data)
-{
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
-    {
-        esp_wifi_connect();
-        ESP_LOGI(TAG, "Intentando conectar a la red...");
-    }
-    else if (event_base == WIFI_EVENT &&
-             event_id == WIFI_EVENT_STA_DISCONNECTED)
-    {
-        if (s_retry_num < 10)
-        {
-            esp_wifi_connect();
-            s_retry_num++;
-            ESP_LOGI(TAG, "retry to connect to the AP");
-        }
-        else
-        {
-            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
-        }
-        ESP_LOGI(TAG, "connect to the AP fail");
-    }
-    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
-    {
-        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
-        s_retry_num = 0;
-        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
-    }
-}
-
-void wifi_init_sta(char *ssid, char *password)
-{
-    s_wifi_event_group = xEventGroupCreate();
-
-    ESP_ERROR_CHECK(esp_netif_init());
-
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_create_default_wifi_sta();
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-    esp_event_handler_instance_t instance_any_id;
-    esp_event_handler_instance_t instance_got_ip;
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(
-        WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, &instance_any_id));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(
-        IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
-
-    wifi_config_t wifi_config;
-    memset(&wifi_config, 0, sizeof(wifi_config_t));
-
-    // Set the specific fields
-    strcpy((char *)wifi_config.sta.ssid, WIFI_SSID);
-    strcpy((char *)wifi_config.sta.password, WIFI_PASSWORD);
-    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
-    wifi_config.sta.pmf_cfg.capable = true;
-    wifi_config.sta.pmf_cfg.required = false;
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-
-    ESP_LOGI(TAG, "wifi_init_sta finished.");
-
-    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
-                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-                                           pdFALSE, pdFALSE, portMAX_DELAY);
-
-    if (bits & WIFI_CONNECTED_BIT)
-    {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", ssid,
-                 password);
-    }
-    else if (bits & WIFI_FAIL_BIT)
-    {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", ssid,
-                 password);
-    }
-    else
-    {
-        ESP_LOGE(TAG, "UNEXPECTED EVENT");
-    }
-
-    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(
-        IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
-    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(
-        WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
-    vEventGroupDelete(s_wifi_event_group);
-}
-
 static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param)
 {
     switch (event)
@@ -634,41 +529,21 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                 int32_t data = param->write.value[0] << 24 | param->write.value[1] << 16 | param->write.value[2] << 8 | param->write.value[3];
                 Write_NVS(data, 9);
             }
-            else if (heart_rate_handle_table[IDX_CHAR_VAL_HOST_IP] == param->write.handle && param->write.len == 4)
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_HOST_IP] == param->write.handle && param->write.len <= 20)
             {
-                int32_t data = param->write.value[0] << 24 | param->write.value[1] << 16 | param->write.value[2] << 8 | param->write.value[3];
-                Write_NVS(data, 10);
+                Write_NVS_string((char *)param->write.value, param->write.len, 10);
             }
-            else if (heart_rate_handle_table[IDX_CHAR_VAL_SSID] == param->write.handle && param->write.len <= 16)
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_SSID] == param->write.handle && param->write.len <= 20)
             {
-                size_t num_ints = param->write.len / 4;
-
-                uint32_t data[4];
-                // Copy the data from param->write.value to our buffer
-                for (size_t i = 0; i < num_ints; ++i)
-                {
-                    data[i] = (param->write.value[i * 4] << 24) |
-                              (param->write.value[i * 4 + 1] << 16) |
-                              (param->write.value[i * 4 + 2] << 8) |
-                              (param->write.value[i * 4 + 3]);
-                }
-                Write_NVS(*data, 11);
+                Write_NVS_string((char *)param->write.value, param->write.len, 11);
             }
-            else if (heart_rate_handle_table[IDX_CHAR_VAL_PASS] == param->write.handle && param->write.len <= 16)
+            else if (heart_rate_handle_table[IDX_CHAR_VAL_PASS] == param->write.handle && param->write.len <= 20)
             {
-                size_t num_ints = param->write.len / 4;
-
-                uint32_t data[4];
-                // Copy the data from param->write.value to our buffer
-                for (size_t i = 0; i < num_ints; ++i)
-                {
-                    data[i] = (param->write.value[i * 4] << 24) |
-                              (param->write.value[i * 4 + 1] << 16) |
-                              (param->write.value[i * 4 + 2] << 8) |
-                              (param->write.value[i * 4 + 3]);
-                }
-                Write_NVS(data, 12);
-                esp_deep_sleep(100000);
+                Write_NVS_string((char *)param->write.value, param->write.len, 12);
+                char pass[20];
+                Read_NVS_string(pass, 20, 12);
+                ESP_LOGI(GATTS_TABLE_TAG, "PASS: %s", pass);
+                esp_deep_sleep(1000000);
             }
             else
             {
@@ -790,23 +665,10 @@ void app_main(void)
 
     int32_t status[1] = {-1};
     Read_NVS(status, 1);
-    ESP_LOGI(TAG, "Status: %ld\n", status[0]);
 
-    if (status[0] == 20)
+    if (status[0] == 20 || status[0] == 21 || status[0] == 22 || status[0] == 23)
     {
-        wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
-        ESP_LOGI(TAG, "Conectado a WiFi!\n");
-        tcp_conf();
-        return;
-    }
-
-    if (status[0] == 21 || status[0] == 22)
-    {
-        wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
-        ESP_LOGI(TAG, "Conectado a WiFi!\n");
-        srand(time(NULL));
-
-        socket_tcp();
+        connect_to_wifi();
         return;
     }
 

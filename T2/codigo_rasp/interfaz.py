@@ -9,7 +9,7 @@ from PyQt5.QtGui import QPen, QColor
 import pyqtgraph as pg
 from PyQt5 import uic
 from qasync import QEventLoop, asyncSlot
-from tcp_server import TCP_Server, tcp_bd
+from tcp_server import TCP_Server, tcp_bd, UDP_Server
 import multiprocessing
 
 ESP32_1_MAC_ADDRESS = "C8:2E:18:F4:E6:16"
@@ -40,7 +40,7 @@ def status_index_to_code(index):
     elif index == 3:
         return 22
     elif index == 4:
-        return 33
+        return 23
     elif index == 5:
         return 30
     elif index == 6:
@@ -55,6 +55,17 @@ class ConfigDialog(QDialog):
         self.status = 0
         self.text_tcp_port.setText("1234")
         self.text_udp_port.setText("1235")
+        self.text_host_ip.setText("192.168.1.83")
+        self.text_ssid.setText("TeoyKala 2.4")
+        self.text_pass.setText("208470701G")
+
+        self.text_acc_sampling.setText("100")
+        self.text_acc_sensibity.setText("2")
+        self.text_gyro_sensibility.setText("250")
+        self.textEdit_18.setText("1000")
+        self.text_disc_time.setText("5")
+
+
 
     def setSignals(self):
         self.selec_10.currentIndexChanged.connect(self.leer)
@@ -79,11 +90,14 @@ class ConfigDialog(QDialog):
         print("stop")
         print(self.status)
         if self.status == 21 or self.status == 22:
-            print("a")
             self.tcp_server.stop_server()
-            print("b")
             self.tcp_server_thread.join()
-            print("c")
+            self.tcp_server_thread = None
+        if self.status == 23:
+            self.udp_server.stop_server()
+            self.udp_server_thread.join()
+            self.udp_server_thread = None
+
             
 
     # def initGraph(self):
@@ -116,19 +130,23 @@ class ConfigDialog(QDialog):
         id_protocol = self.selec_11.currentIndex() + 1
 
         if self.status == 0:
-            async with BleakClient(ESP32_1_MAC_ADDRESS) as client:
-                await client.write_gatt_char(CHARACTERISTICS["status"], bytearray([status]))
-                await client.write_gatt_char(CHARACTERISTICS["ID_protocol"], bytearray([id_protocol]))
-                await client.write_gatt_char(CHARACTERISTICS["BMI270_sampling"], bytearray(int(acc_sampling).to_bytes(4)))
-                await client.write_gatt_char(CHARACTERISTICS["BMI270_acc_sensibility"], bytearray(int(acc_sensibility).to_bytes(4)))
-                await client.write_gatt_char(CHARACTERISTICS["BMI270_gyro_sensibility"], bytearray(int(gyro_sensibility).to_bytes(4)))
-                await client.write_gatt_char(CHARACTERISTICS["BME688_sampling"], bytearray(int(bme688_sampling).to_bytes(4)))
-                await client.write_gatt_char(CHARACTERISTICS["discontinous_time"], bytearray(int(disc_time).to_bytes(4)))
-                await client.write_gatt_char(CHARACTERISTICS["port_tcp"], bytearray(int(tcp_port).to_bytes(4)))
-                await client.write_gatt_char(CHARACTERISTICS["port_udp"], bytearray(int(udp_port).to_bytes(4)))
-                await client.write_gatt_char(CHARACTERISTICS["host_ip_addr"], bytearray(int(ip_addr).to_bytes(4)))
-                await client.write_gatt_char(CHARACTERISTICS["ssid"], bytearray(ssid, 'utf-8'))
-                await client.write_gatt_char(CHARACTERISTICS["pass"], bytearray(password, 'utf-8'))
+            try:
+                async with BleakClient(ESP32_1_MAC_ADDRESS) as client:
+                    await client.write_gatt_char(CHARACTERISTICS["status"], bytearray([status]))
+                    await client.write_gatt_char(CHARACTERISTICS["ID_protocol"], bytearray([id_protocol]))
+                    await client.write_gatt_char(CHARACTERISTICS["BMI270_sampling"], bytearray(int(acc_sampling).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["BMI270_acc_sensibility"], bytearray(int(acc_sensibility).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["BMI270_gyro_sensibility"], bytearray(int(gyro_sensibility).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["BME688_sampling"], bytearray(int(bme688_sampling).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["discontinous_time"], bytearray(int(disc_time).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["port_tcp"], bytearray(int(tcp_port).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["port_udp"], bytearray(int(udp_port).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["host_ip_addr"], bytearray(ip_addr, 'utf-8'))
+                    await client.write_gatt_char(CHARACTERISTICS["ssid"], bytearray(ssid, 'utf-8'))
+                    await client.write_gatt_char(CHARACTERISTICS["pass"], bytearray(password, 'utf-8'))
+            except Exception as e:
+                print(f"Error: {e}")
+
 
         elif self.status == 20:
             tcp_bd(acc_sampling, acc_sensibility, gyro_sensibility, bme688_sampling, disc_time, tcp_port, udp_port, ip_addr, ssid, password, status, id_protocol)
@@ -171,12 +189,17 @@ class ConfigDialog(QDialog):
             # consola
             # data = await client.read_gatt_char(CHARACTERISTICS["status"])
             self.consola_1.setText("Status:")
-            print("Status: ", status)
+            print("3Status: ", status)
             if status == 21 or status == 22:
                 self.tcp_server = TCP_Server()
                 self.tcp_server_thread = threading.Thread(
                     target=self.tcp_server.tcp_server)
                 self.tcp_server_thread.start()
+            if status == 23:
+                self.udp_server = UDP_Server()
+                self.udp_server_thread = threading.Thread(
+                    target=self.udp_server.udp_server)
+                self.udp_server_thread.start()
                 
 
         except Exception as e:

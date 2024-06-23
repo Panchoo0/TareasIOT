@@ -4,6 +4,7 @@
 #include "esp_log.h"
 #include "esp_wifi.h"
 #include "nvs_func.h"
+#include <unistd.h>
 
 #define WIFI_SSID "TeoyKala 2.4"
 #define WIFI_PASSWORD "208470701G"
@@ -18,12 +19,108 @@ static const char *TAG = "WIFI";
 static int s_retry_num = 0;
 static EventGroupHandle_t s_wifi_event_group;
 
-int udp_conn(char ID_protocol, char status)
+void event_handler(void *arg, esp_event_base_t event_base,
+                   int32_t event_id, void *event_data)
 {
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
+    {
+        esp_wifi_connect();
+        ESP_LOGI(TAG, "Intentando conectar a la red...");
+    }
+    else if (event_base == WIFI_EVENT &&
+             event_id == WIFI_EVENT_STA_DISCONNECTED)
+    {
+        if (s_retry_num < 10)
+        {
+            esp_wifi_connect();
+            s_retry_num++;
+            ESP_LOGI(TAG, "retry to connect to the AP");
+        }
+        else
+        {
+            xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
+        }
+        ESP_LOGI(TAG, "connect to the AP fail");
+    }
+    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+    {
+        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        s_retry_num = 0;
+        xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+    }
+}
+
+void wifi_init_sta(char *ssid, char *password)
+{
+    s_wifi_event_group = xEventGroupCreate();
+
+    ESP_ERROR_CHECK(esp_netif_init());
+
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_sta();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    esp_event_handler_instance_t instance_any_id;
+    esp_event_handler_instance_t instance_got_ip;
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(
+        WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, &instance_any_id));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(
+        IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
+
+    wifi_config_t wifi_config;
+    memset(&wifi_config, 0, sizeof(wifi_config_t));
+
+    // Set the specific fields
+    strcpy((char *)wifi_config.sta.ssid, WIFI_SSID);
+    strcpy((char *)wifi_config.sta.password, WIFI_PASSWORD);
+    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    wifi_config.sta.pmf_cfg.capable = true;
+    wifi_config.sta.pmf_cfg.required = false;
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    ESP_LOGI(TAG, "wifi_init_sta finished.");
+
+    EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
+                                           WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+                                           pdFALSE, pdFALSE, portMAX_DELAY);
+
+    if (bits & WIFI_CONNECTED_BIT)
+    {
+        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", ssid,
+                 password);
+    }
+    else if (bits & WIFI_FAIL_BIT)
+    {
+        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", ssid,
+                 password);
+    }
+    else
+    {
+        ESP_LOGE(TAG, "UNEXPECTED EVENT");
+    }
+
+    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(
+        IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
+    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(
+        WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
+    vEventGroupDelete(s_wifi_event_group);
+}
+
+void socket_udp(char ID_protocol, char status)
+{
+    int PORT;
+    Read_NVS(&PORT, 9);
+    char IP[20];
+    Read_NVS_string(IP, 20, 10);
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_UDP_PORT);
-    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
+    server_addr.sin_port = htons(PORT);
+    inet_pton(AF_INET, IP, &server_addr.sin_addr.s_addr);
 
     // Crear un socket
     int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -33,39 +130,56 @@ int udp_conn(char ID_protocol, char status)
         return 0;
     }
 
-    char *message = set_message(ID_protocol, status);
-    int size = get_procotol_length(ID_protocol);
-
-    ESP_LOGI(TAG, "Largo %d\n", size);
-
-    struct timeval timeout;
-    timeout.tv_sec = 5;
-    timeout.tv_usec = 0;
-
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
-    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof timeout);
-
-    sendto(sock, message, size, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
-    ESP_LOGI(TAG, "Se enviaron los datos");
-
-    return 0;
-}
-
-void socket_udp(char ID_protocol, char status)
-{
-    while (udp_conn(ID_protocol, status) == 0)
+    while (1)
     {
+        char *message = set_message(ID_protocol, status);
+        int size = get_procotol_length(ID_protocol);
+
+        ESP_LOGI(TAG, "Largo %d", size);
+        struct timeval timeout;
+        timeout.tv_sec = 5;
+        timeout.tv_usec = 0;
+
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
+        setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof timeout);
+
+        sendto(sock, message, size, 0, (struct sockaddr *)&server_addr, sizeof(server_addr));
+        ESP_LOGI(TAG, "Se enviaron los datos");
+
+        char buffer[10];
+        int rx_len = recvfrom(sock, buffer, sizeof(buffer), 0, NULL, NULL);
+        if (rx_len > 0)
+        {
+            buffer[rx_len] = '\0';
+            ESP_LOGI(TAG, "Datos recibidos (%d): %s", rx_len, buffer);
+            if (strcmp(buffer, "STOP") == 0)
+            {
+                int32_t status[1] = {0};
+                Write_NVS(status, 1);
+                printf("Se detiene la conexión por la RASP");
+                close(sock);
+                esp_deep_sleep(3000000);
+                
+            }
+        }
     }
-    esp_deep_sleep(10000000);
-    return;
+
 }
 
 void socket_tcp()
 {
+    int PORT;
+    Read_NVS(&PORT, 8);
+    char IP[20];
+    Read_NVS_string(IP, 20, 10);
+
+    ESP_LOGI(TAG, "IP: %s", IP);
+    ESP_LOGI(TAG, "PORT: %d", PORT);
+
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERVER_PORT);
-    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
+    server_addr.sin_port = htons(PORT);
+    inet_pton(AF_INET, IP, &server_addr.sin_addr.s_addr);
 
     // Crear un socket
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -86,7 +200,7 @@ void socket_tcp()
         esp_deep_sleep(3000000);
         return;
     }
-    ESP_LOGI(TAG, "Conectado al servidor %s:%d", SERVER_IP, SERVER_PORT);
+    ESP_LOGI(TAG, "Conectado al servidor %s:%d", IP, PORT);
 
     char ID_protocol;
     Read_NVS(&ID_protocol, 2);
@@ -165,13 +279,12 @@ void socket_tcp()
             printf("Deep sleep\n");
             close(sock);
             esp_deep_sleep(disc_time * 1000000);
-
+        }
+        else
+        {
+            sleep(5); // Sleep for 5 seconds
         }
     }
-
-    // esp_deep_sleep_enable_timer_wakeup(60000000); // 10000000 us = 10 s
-
-    // esp_deep_sleep_start();
 }
 
 void tcp_conf()
@@ -271,14 +384,44 @@ void tcp_conf()
         char *s_ip = tokens;
         tokens = strtok(NULL, ";");
         ESP_LOGI(TAG, "IP: %s", s_ip);
+        Write_NVS_string(s_ip, strlen(s_ip), 10);
 
         char *s_ssid = tokens;
         tokens = strtok(NULL, ";");
         ESP_LOGI(TAG, "SSID: %s", s_ssid);
+        Write_NVS_string(s_ssid, strlen(s_ssid), 11);
 
         char *s_pass = tokens;
         ESP_LOGI(TAG, "Pass: %s", s_pass);
+        Write_NVS_string(s_pass, strlen(s_pass), 12);
     }
 
     esp_deep_sleep(10000000);
+}
+
+void connect_to_wifi()
+{
+    wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
+    ESP_LOGI(TAG, "Conectado a WiFi!\n");
+    srand(time(NULL));
+
+    int32_t status[1];
+
+    Read_NVS(status, 1);
+
+    if (status[0] == 20)
+    {
+        tcp_conf();
+    }
+    else if (status[0] == 21 || status[0] == 22)
+    {
+        socket_tcp();
+    } else if (status[0] == 23)
+    {
+        socket_udp(1, 23);
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Error en el status");
+    }
 }
