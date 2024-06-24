@@ -6,12 +6,6 @@
 #include "nvs_func.h"
 #include <unistd.h>
 
-#define WIFI_SSID "TeoyKala 2.4"
-#define WIFI_PASSWORD "208470701G"
-#define SERVER_IP "192.168.1.83" // IP del servidor
-#define SERVER_PORT 1234
-#define SERVER_UDP_PORT 1235
-
 // Variables de WiFi
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
@@ -51,7 +45,7 @@ void event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-void wifi_init_sta(char *ssid, char *password)
+void wifi_init_sta()
 {
     s_wifi_event_group = xEventGroupCreate();
 
@@ -73,9 +67,14 @@ void wifi_init_sta(char *ssid, char *password)
     wifi_config_t wifi_config;
     memset(&wifi_config, 0, sizeof(wifi_config_t));
 
+    char ssid_aux[20];
+    Read_NVS_string(ssid_aux, 20, 11);
+    char password_aux[20];
+    Read_NVS_string(password_aux, 20, 12);
+
     // Set the specific fields
-    strcpy((char *)wifi_config.sta.ssid, WIFI_SSID);
-    strcpy((char *)wifi_config.sta.password, WIFI_PASSWORD);
+    strcpy((char *)wifi_config.sta.ssid, ssid_aux);
+    strcpy((char *)wifi_config.sta.password, password_aux);
     wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     wifi_config.sta.pmf_cfg.capable = true;
     wifi_config.sta.pmf_cfg.required = false;
@@ -91,13 +90,13 @@ void wifi_init_sta(char *ssid, char *password)
 
     if (bits & WIFI_CONNECTED_BIT)
     {
-        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", ssid,
-                 password);
+        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s", ssid_aux,
+                 password_aux);
     }
     else if (bits & WIFI_FAIL_BIT)
     {
-        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", ssid,
-                 password);
+        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s", ssid_aux,
+                 password_aux);
     }
     else
     {
@@ -127,7 +126,7 @@ void socket_udp(char ID_protocol, char status)
     if (sock < 0)
     {
         ESP_LOGE(TAG, "Error al crear el socket");
-        return 0;
+        return ;
     }
 
     while (1)
@@ -273,6 +272,8 @@ void socket_tcp()
                 close(sock);
                 esp_deep_sleep(3000000);
             }
+        } else {
+            printf("No se recibieron datos");
         }
         if (status == 22)
         {
@@ -291,10 +292,12 @@ void tcp_conf()
 {
     int PORT;
     Read_NVS(&PORT, 8);
+    char IP[20];
+    Read_NVS_string(IP, 20, 10);
     struct sockaddr_in server_addr;
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(PORT);
-    inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr.s_addr);
+    inet_pton(AF_INET, IP, &server_addr.sin_addr.s_addr);
 
     // Crear un socket
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -316,7 +319,7 @@ void tcp_conf()
         esp_deep_sleep(10000000);
         return;
     }
-    ESP_LOGI(TAG, "Conectado al servidor %s:%d", SERVER_IP, PORT);
+    ESP_LOGI(TAG, "Conectado al servidor %s:%d", IP, PORT);
 
     char buffer[512];
 
@@ -401,7 +404,7 @@ void tcp_conf()
 
 void connect_to_wifi()
 {
-    wifi_init_sta(WIFI_SSID, WIFI_PASSWORD);
+    wifi_init_sta();
     ESP_LOGI(TAG, "Conectado a WiFi!\n");
     srand(time(NULL));
 

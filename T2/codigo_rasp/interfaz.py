@@ -91,11 +91,11 @@ class ConfigDialog(QDialog):
         print(self.status)
         if self.status == 21 or self.status == 22:
             self.tcp_server.stop_server()
-            self.tcp_server_thread.join()
+            # self.tcp_server_thread.join()
             self.tcp_server_thread = None
         if self.status == 23:
             self.udp_server.stop_server()
-            self.udp_server_thread.join()
+            # self.udp_server_thread.join()
             self.udp_server_thread = None
 
             

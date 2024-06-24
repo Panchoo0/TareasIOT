@@ -212,13 +212,12 @@ class TCP_Server:
         socketTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         socketTCP.bind((HOST, PORT))
         socketTCP.listen()
+        print("TCP esperando conexión...")
+        conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
+        print("Conexión establecida con", addr, "\n")
 
         while True:
             try:
-                print("TCP esperando conexión...")
-                conn, addr = socketTCP.accept()  # Espera una conexión del microcontrolador
-                print("Conexión establecida con", addr, "\n")
-
                 data = conn.recv(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
                 print("Recibido (TCP)")
                 parsed_headers = parse_headers(data)
@@ -235,18 +234,15 @@ class TCP_Server:
                     print("Cerrando conexión")
                     msg = 'STOP'
                     conn.sendall(msg.encode('utf-8'))
-                    conn.close()
                     break
-                conn.close()
             except KeyboardInterrupt:
                 print("Cerrando conexión")
-                conn.close()
                 break
             except Exception as e:
                 print(e)
-                conn.close()
                 break
-
+            
+        conn.close()
         socketTCP.close()
         print("SOCKET stopped")
 
