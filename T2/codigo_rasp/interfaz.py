@@ -192,7 +192,7 @@ class ConfigDialog(QDialog):
                     self.client = client
                     await client.is_connected()
                     print("Connected to ESP32", ADDRESS)
-                break
+                    break
             except Exception as e:
                 print(f"Error: {e}")
                 tries += 1
