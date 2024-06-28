@@ -53,7 +53,7 @@ def status_index_to_code(index):
 class ConfigDialog(QDialog):
     def __init__(self):
         super().__init__()
-        uic.loadUi('iot_tarea2.ui', self)  # Load the .ui file
+        uic.loadUi('design.ui', self)  # Load the .ui file
         self.setSignals()
         self.status = 0
         self.text_tcp_port.setText("1234")
