@@ -226,7 +226,7 @@ class ConfigDialog(QDialog):
         if self.status == 0 or self.status == 30 or self.status == 31:
             try:
                 if self.client is None:
-                    client = await self.connect()
+                    # client = await self.connect()
                     async with BleakClient(ADDRESS) as client:
                     # async with self.client as client:
                         await client.write_gatt_char(CHARACTERISTICS["status"], bytearray([status]))
