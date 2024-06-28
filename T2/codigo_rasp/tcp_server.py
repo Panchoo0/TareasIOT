@@ -1,8 +1,6 @@
 import threading
 import socket
 import struct
-from pynput.mouse import Button, Controller
-from pynput import keyboard
 # from modelos import Datos, Configuracion, Loss
 import datetime
 
