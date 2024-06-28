@@ -189,6 +189,7 @@ class ConfigDialog(QDialog):
                 self.consola_1.setText(
                     f"Conectando...\nIntento {tries}")
                 async with BleakClient(ADDRESS) as client:
+
                     self.client = client
                     await client.is_connected()
                     print("Connected to ESP32", ADDRESS)
@@ -226,7 +227,8 @@ class ConfigDialog(QDialog):
             try:
                 if self.client is None:
                     client = await self.connect()
-                    async with self.client as client:
+                    async with BleakClient(ADDRESS) as client:
+                    # async with self.client as client:
                         await client.write_gatt_char(CHARACTERISTICS["status"], bytearray([status]))
                         await client.write_gatt_char(CHARACTERISTICS["ID_protocol"], bytearray([id_protocol]))
                         await client.write_gatt_char(CHARACTERISTICS["BMI270_sampling"], bytearray(int(acc_sampling).to_bytes(4)))
