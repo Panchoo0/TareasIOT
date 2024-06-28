@@ -17,7 +17,7 @@ def parse_headers(data):
     
     id_protocol = struct.unpack('<B', data[0:1])[0]
     status = struct.unpack('<B', data[1:2])[0]
-    len_data = struct.unpack('<H', data[2:4])[0]
+    len_data = struct.unpack('>H', data[2:4])[0]
 
     return {
         'ID_Protocol': id_protocol,
@@ -147,24 +147,29 @@ def parse_protocol_5(data):
 
 def parse_data(data):
     try:
-        protocol = struct.unpack('<c', data[1:2])[0]
+        protocol = struct.unpack('<c', data[0:1])[0]
+        parsed_data = None
         if protocol == b'\x01':
-            parse_data = parse_protocol_1(data)
+            parsed_data = parse_protocol_1(data)
         elif protocol == b'\x02':
-            parse_data = parse_protocol_2(data)
+            parsed_data = parse_protocol_2(data)
         elif protocol == b'\x03':
-            parse_data = parse_protocol_3(data)
+            parsed_data = parse_protocol_3(data)
         elif protocol == b'\x04':
-            parse_data = parse_protocol_4(data)
+            parsed_data = parse_protocol_4(data)
         elif protocol == b'\x05':
-            parse_data = parse_protocol_5(data)
+            parsed_data = parse_protocol_5(data)
 
-        if not parse_data:
+        if not parsed_data:
             return None
         
+        return parsed_data
+
+
     except Exception as e:
         print(e)
         return None
+    
 
 class UDP_Server:
     def __init__(self):
@@ -183,7 +188,7 @@ class UDP_Server:
                 print("UDP esperando conexión...")
                 data, addr = socketUDP.recvfrom(MAX_SIZE)  # Recibe hasta 1024 bytes del cliente
                 print("Recibido (UDP)")
-                parse_data(data)
+                parsed_data = parse_data(data)
                 if self.stop_event.is_set():
                     print("Cerrando conexión")
                     msg = 'STOP'
@@ -198,17 +203,16 @@ class UDP_Server:
 
         socketUDP.close()
         print("SOCKET stopped")
+from PyQt5.QtCore import Qt, QRectF, QPointF, QThread, pyqtSignal
 
-class TCP_Server:
-    def __init__(self):
+class TCP_Server(QThread):
+    update_data = pyqtSignal(dict)
+
+    def __init__(self, parent=None):
         self.stop_event = threading.Event()
+        super(TCP_Server, self).__init__(parent)
 
-    def stop_server(self):
-        self.stop_event.set()
-        print("Server stopped")
-
-
-    def tcp_server(self):
+    def run(self):
         socketTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         socketTCP.bind((HOST, PORT))
         socketTCP.listen()
@@ -229,7 +233,10 @@ class TCP_Server:
                         print("Data len", len(data))
                         parte += 1
 
-                parse_data(data)
+                parsed_data = parse_data(data)
+                if parsed_data:
+                    print(parsed_data)
+                    self.update_data.emit(parsed_data)
                 if self.stop_event.is_set():
                     print("Cerrando conexión")
                     msg = 'STOP'
@@ -239,6 +246,7 @@ class TCP_Server:
                 print("Cerrando conexión")
                 break
             except Exception as e:
+                print("ERROR")
                 print(e)
                 break
             

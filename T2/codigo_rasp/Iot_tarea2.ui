@@ -574,7 +574,7 @@
                         <attribute name="title">
                               <string>Pestaña de monitoreo</string>
                         </attribute>
-                        <widget class="GraphicsLayoutWidget" name="plot1">
+                        <widget class="QWidget" name="plot1">
                               <property name="geometry">
                                     <rect>
                                           <x>30</x>
@@ -587,7 +587,7 @@
                                     <string notr="true">background-color: rgb(0, 0, 0);</string>
                               </property>
                         </widget>
-                        <widget class="GraphicsLayoutWidget" name="plot2">
+                        <widget class="QWidget" name="plot2">
                               <property name="geometry">
                                     <rect>
                                           <x>30</x>
@@ -663,27 +663,57 @@
                               </item>
                               <item>
                                     <property name="text">
+                                          <string>presión</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>co</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
                                           <string>humedad</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
-                                          <string>Acc_x</string>
+                                          <string>Amp_x</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
-                                          <string>Acc_y</string>
+                                          <string>Amp_y</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
-                                          <string>Acc_z</string>
+                                          <string>Amp_z</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>Freq_x</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>Freq_y</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>Freq_z</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
                                           <string>RMS</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>batt_lvl</string>
                                     </property>
                               </item>
                         </widget>
@@ -732,27 +762,57 @@
                               </item>
                               <item>
                                     <property name="text">
+                                          <string>presión</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>co</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
                                           <string>humedad</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
-                                          <string>Acc_x</string>
+                                          <string>Amp_x</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
-                                          <string>Acc_y</string>
+                                          <string>Amp_y</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
-                                          <string>Acc_z</string>
+                                          <string>Amp_z</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>Freq_x</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>Freq_y</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>Freq_z</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
                                           <string>RMS</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>batt_lvl</string>
                                     </property>
                               </item>
                         </widget>
@@ -775,22 +835,47 @@
                               </item>
                               <item>
                                     <property name="text">
+                                          <string>presión</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>co</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
                                           <string>humedad</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
-                                          <string>Acc_x</string>
+                                          <string>Amp_x</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
-                                          <string>Acc_y</string>
+                                          <string>Amp_y</string>
                                     </property>
                               </item>
                               <item>
                                     <property name="text">
-                                          <string>Acc_z</string>
+                                          <string>Amp_z</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>Freq_x</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>Freq_y</string>
+                                    </property>
+                              </item>
+                              <item>
+                                    <property name="text">
+                                          <string>Freq_z</string>
                                     </property>
                               </item>
                               <item>
@@ -798,8 +883,14 @@
                                           <string>RMS</string>
                                     </property>
                               </item>
+                              <item>
+                                    <property name="text">
+                                          <string>batt_lvl</string>
+                                    </property>
+                              </item>
+                              
                         </widget>
-                        <widget class="GraphicsLayoutWidget" name="plot3">
+                        <widget class="QWidget" name="plot3">
                               <property name="geometry">
                                     <rect>
                                           <x>30</x>

@@ -203,19 +203,19 @@ void socket_tcp()
 
     char ID_protocol;
     Read_NVS(&ID_protocol, 2);
-    printf("ID Protocol: %d\n", ID_protocol);
+    printf("ID Protocol: %d", ID_protocol);
     char status;
     Read_NVS(&status, 1);
-    printf("Status: %d\n", status);
+    printf("Status: %d", status);
     char disc_time;
     Read_NVS(&disc_time, 7);
-    printf("Disc Time: %d\n", disc_time);
+    printf("Disc Time: %d", disc_time);
 
     while (1)
     {
         char *message = set_message(ID_protocol, status);
         int size = get_procotol_length(ID_protocol);
-        ESP_LOGI(TAG, "Largo %d\n", size);
+        ESP_LOGI(TAG, "Largo %d", size);
 
         if (size > 1000)
         {
@@ -230,7 +230,7 @@ void socket_tcp()
                         ESP_LOGE(TAG, "ERROR AL ENVIAR DATOS");
                         continue;
                     }
-                    ESP_LOGI(TAG, "Se envió %d bytes\n", r);
+                    ESP_LOGI(TAG, "Se envió %d bytes", r);
                     break;
                 }
                 int r = send(sock, message + i, 1000, 0);
@@ -248,7 +248,7 @@ void socket_tcp()
             int r = send(sock, message, size, 0);
         }
 
-        ESP_LOGI(TAG, "Se enviaron los datos\n");
+        ESP_LOGI(TAG, "Se enviaron los datos");
         free(message);
 
         struct timeval timeout;
@@ -263,17 +263,17 @@ void socket_tcp()
         if (rx_len > 0)
         {
             buffer[rx_len] = '\0';
-            ESP_LOGI(TAG, "Datos recibidos (%d): %s\n", rx_len, buffer);
+            ESP_LOGI(TAG, "Datos recibidos (%d): %s", rx_len, buffer);
             if (strcmp(buffer, "STOP") == 0)
             {
                 int32_t status[1] = {0};
                 Write_NVS(status, 1);
-                printf("Se detiene la conexión por la RASP\n");
+                printf("Se detiene la conexión por la RASP");
                 close(sock);
                 esp_deep_sleep(3000000);
             }
         } else {
-            printf("No se recibieron datos");
+            printf("No se recibieron datos\n");
         }
         if (status == 22)
         {
@@ -283,7 +283,7 @@ void socket_tcp()
         }
         else
         {
-            sleep(5); // Sleep for 5 seconds
+            sleep(1); 
         }
     }
 }
@@ -405,7 +405,7 @@ void tcp_conf()
 void connect_to_wifi()
 {
     wifi_init_sta();
-    ESP_LOGI(TAG, "Conectado a WiFi!\n");
+    ESP_LOGI(TAG, "Conectado a WiFi!");
     srand(time(NULL));
 
     int32_t status[1];

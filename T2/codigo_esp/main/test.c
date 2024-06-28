@@ -20,6 +20,8 @@
 #include "wifi_server.h"
 #include "nvs_func.h"
 
+#include "esp_timer.h"
+
 #define GATTS_TABLE_TAG "GATTS_TABLE_DEMO"
 
 #define PROFILE_NUM 1
@@ -82,6 +84,10 @@ enum
 
     IDX_CHAR_PASS,
     IDX_CHAR_VAL_PASS,
+
+    IDX_CHAR_VALUES,
+    IDX_CHAR_VAL_VALUES,
+    IDX_CHAR_VALUES_CFG,
 
     HRS_IDX_NB,
 };
@@ -222,9 +228,11 @@ static const uint16_t GATTS_CHAR_UUID_PORT_UDP = 0xFF09;
 static const uint16_t GATTS_CHAR_UUID_HOST_IP = 0xFF0A;
 static const uint16_t GATTS_CHAR_UUID_SSID = 0xFF0B;
 static const uint16_t GATTS_CHAR_UUID_PASS = 0xFF0C;
+static const uint16_t GATTS_CHAR_UUID_VALUES = 0xFF0D;
 
 static const uint16_t primary_service_uuid = ESP_GATT_UUID_PRI_SERVICE;
 static const uint16_t character_declaration_uuid = ESP_GATT_UUID_CHAR_DECLARE;
+static const uint16_t character_client_config_uuid = ESP_GATT_UUID_CHAR_CLIENT_CONFIG;
 static const uint8_t char_prop_read_write_notify = ESP_GATT_CHAR_PROP_BIT_WRITE | ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
 static const uint8_t STATUS[1] = {0};
 static const uint8_t ID_PROTOCOL[1] = {1};
@@ -238,6 +246,12 @@ static const uint32_t PORT_UDP[1] = {0};
 static const uint32_t HOST_IP[1] = {0};
 static const uint32_t SSID[1] = {0};
 static const uint32_t PASS[1] = {0};
+static const uint8_t heart_measurement_ccc[2] = {0x00, 0x00};
+static const uint8_t VALUES[188] = {1};
+
+uint16_t CONN_ID;
+uint16_t CHAR_HANDLE;
+esp_gatt_if_t GATTS_IF;
 
 /* Full Database Description - Used to add attributes into the database */
 static const esp_gatts_attr_db_t gatt_db[HRS_IDX_NB] =
@@ -338,6 +352,17 @@ static const esp_gatts_attr_db_t gatt_db[HRS_IDX_NB] =
         [IDX_CHAR_VAL_PASS] =
             {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&GATTS_CHAR_UUID_PASS, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, GATTS_DEMO_CHAR_VAL_LEN_MAX, sizeof(PASS), (uint32_t *)PASS}},
 
+        /* Characteristic Declaration */
+        [IDX_CHAR_VALUES] =
+            {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_declaration_uuid, ESP_GATT_PERM_READ, CHAR_DECLARATION_SIZE, CHAR_DECLARATION_SIZE, (uint8_t *)&char_prop_read_write_notify}},
+
+        /* Characteristic Value */
+        [IDX_CHAR_VAL_VALUES] =
+            {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&GATTS_CHAR_UUID_VALUES, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, GATTS_DEMO_CHAR_VAL_LEN_MAX, sizeof(VALUES), (uint8_t *)VALUES}},
+
+        /* Characteristic Configuration Descriptor */
+        [IDX_CHAR_VALUES_CFG] =
+            {{ESP_GATT_AUTO_RSP}, {ESP_UUID_LEN_16, (uint8_t *)&character_client_config_uuid, ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE, sizeof(uint16_t), sizeof(heart_measurement_ccc), (uint8_t *)heart_measurement_ccc}},
 };
 
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
@@ -545,6 +570,30 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
                 ESP_LOGI(GATTS_TABLE_TAG, "PASS: %s", pass);
                 esp_deep_sleep(1000000);
             }
+            else if (heart_rate_handle_table[IDX_CHAR_VALUES_CFG] == param->write.handle)
+            {
+                uint16_t descr_value = param->write.value[1] << 8 | param->write.value[0];
+                if (descr_value == 0x0001)
+                {
+                    ESP_LOGI(GATTS_TABLE_TAG, "Notifications enabled");
+                    CONN_ID = param->write.conn_id;
+                    CHAR_HANDLE = heart_rate_handle_table[IDX_CHAR_VAL_VALUES];
+                    GATTS_IF = gatts_if;
+                }
+                else if (descr_value == 0x0002)
+                {
+                    ESP_LOGI(GATTS_TABLE_TAG, "Indications enabled");
+                }
+                else if (descr_value == 0x0000)
+                {
+                    ESP_LOGI(GATTS_TABLE_TAG, "Notifications/Indications disabled");
+                }
+                else
+                {
+                    ESP_LOGE(GATTS_TABLE_TAG, "Unknown value %d", descr_value);
+                }
+            }
+
             else
             {
                 ESP_LOGI(GATTS_TABLE_TAG, "NO MATCH");
@@ -650,6 +699,108 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
     } while (0);
 }
 
+void update_char_value(void *arg)
+{
+    if (CONN_ID == 0 && CHAR_HANDLE == 0 && GATTS_IF == 0)
+    {
+        return;
+    }
+    char ID_protocol;
+    Read_NVS(&ID_protocol, 2);
+    char status;
+    Read_NVS(&status, 1);
+    printf("Status: %d", status);
+    uint8_t *message = (uint8_t *)set_message(ID_protocol, status);
+    uint16_t size = (uint16_t)get_procotol_length(ID_protocol);
+
+    // Create a new GATT response with the new value
+    esp_gatt_rsp_t rsp;
+    memset(&rsp, 0, sizeof(esp_gatt_rsp_t));
+    rsp.attr_value.handle = CHAR_HANDLE;
+    rsp.attr_value.len = size;
+    memcpy(rsp.attr_value.value, message, size);
+
+    // Set the new value for the characteristic
+    esp_err_t err = esp_ble_gatts_set_attr_value(CHAR_HANDLE, size, message);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(GATTS_TABLE_TAG, "Set attribute value error, error code = %x", err);
+        return;
+    }
+
+    // Notify connected devices of the change
+    err = esp_ble_gatts_send_indicate(GATTS_IF, CONN_ID, CHAR_HANDLE, size, message, false);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(GATTS_TABLE_TAG, "Send indicate error, error code = %x", err);
+    }
+
+    // // if want to change the value in server database, call:
+    // esp_ble_gatts_set_attr_value(heart_rate_handle_table[IDX_CHAR_VAL_VALUES], sizeof(indicate_data), indicate_data);
+
+    // // the size of indicate_data[] need less than MTU size
+    // esp_ble_gatts_send_indicate(gatts_if, param->write.conn_id, heart_rate_handle_table[IDX_CHAR_VAL_VALUES],
+    //                             sizeof(indicate_data), indicate_data, true);
+}
+
+esp_timer_handle_t periodic_timer;
+esp_timer_handle_t periodic_timer2;
+int has_msg_sent = 0;
+
+void killer(void *arg)
+{
+    int32_t disc_time[1] = {0};
+    Read_NVS(disc_time, 7);
+    ESP_LOGI(GATTS_TABLE_TAG, "Killing");
+    esp_deep_sleep(disc_time[0] * 1000000);
+}
+
+void init_timer3()
+{
+    const esp_timer_create_args_t periodic_timer_args = {
+        .callback = &killer,
+        .name = "periodic"};
+
+    ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, 1000000));
+}
+
+void update_char_value_2(void *arg) {
+    if (CONN_ID == 0 && CHAR_HANDLE == 0 && GATTS_IF == 0)
+    {
+        return;
+    }
+    if (has_msg_sent == 1)
+    {
+        return;
+    }    
+    int32_t disc_time[1] = {0};
+    Read_NVS(disc_time, 7);
+    update_char_value(NULL);
+    init_timer3();
+    has_msg_sent = 1;
+}
+
+void init_timer()
+{
+    const esp_timer_create_args_t periodic_timer_args = {
+        .callback = &update_char_value,
+        .name = "periodic"};
+
+    ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, 1000000));
+}
+
+void init_timer2()
+{
+    const esp_timer_create_args_t periodic_timer_args = {
+        .callback = &update_char_value_2,
+        .name = "periodic"};
+
+    ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, 100000));
+}
+
 void app_main(void)
 {
     esp_err_t ret;
@@ -665,6 +816,7 @@ void app_main(void)
 
     int32_t status[1] = {-1};
     Read_NVS(status, 1);
+    ESP_LOGI(GATTS_TABLE_TAG, "Status: %ld", status[0]);
 
     if (status[0] == 20 || status[0] == 21 || status[0] == 22 || status[0] == 23)
     {
@@ -727,5 +879,14 @@ void app_main(void)
     if (local_mtu_ret)
     {
         ESP_LOGE(GATTS_TABLE_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
+    }
+    if (status[0] == 30)
+    {
+        init_timer();
+    }
+    else if (status[0] == 31)
+    {
+        
+       init_timer2();
     }
 }

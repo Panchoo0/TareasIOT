@@ -4,6 +4,7 @@
 #include <math.h>
 #include <esp_system.h>
 #include "esp_mac.h"
+#include <time.h>
 
 typedef unsigned char u_char;
 
@@ -96,10 +97,10 @@ void mac(uint8_t *base_mac_addr)
 
 void set_headers(char *headers, char ID_protocol, char status)
 {
-    headers[0] = status;
-    headers[1] = ID_protocol;
+    headers[0] = ID_protocol;
+    headers[1] = status;
     headers[2] = 0; // Largo del mensaje
-    headers[3] = 0;     // Largo del mensaje
+    headers[3] = 0; // Largo del mensaje
     printf("Status: %d\n", status);
     printf("ID protocol: %d\n", ID_protocol);
 }
@@ -108,7 +109,7 @@ void set_protocol_1(char *message, char ID_protocol, char status)
 {
     set_headers(message, ID_protocol, status);
     message[2] = 0;                    // Tamaño del mensaje
-    message[3] = 9;                   // Tamano del mensaje
+    message[3] = 9;                    // Tamano del mensaje
     message[4] = (char)gen_batt_lvl(); // batt lvl
 
     // Timestamp
@@ -145,9 +146,6 @@ void set_protocol_2(char *message, char ID_protocol, char status)
     message[17] = (char)(co >> 8 & 0xFF);
     message[18] = (char)(co & 0xFF);
     printf("CO: %f\n", fco);
-
-
-
 }
 
 void set_protocol_3(char *message, char ID_protocol, char status)
@@ -163,7 +161,6 @@ void set_protocol_3(char *message, char ID_protocol, char status)
     message[20] = (char)(rms >> 16 & 0xFF);
     message[21] = (char)(rms >> 8 & 0xFF);
     message[22] = (char)(rms & 0xFF);
-  
 }
 
 void set_protocol_4(char *message, char ID_protocol, char status)
@@ -233,7 +230,6 @@ void set_protocol_4(char *message, char ID_protocol, char status)
     message[46] = (char)(freqz & 0xFF);
 }
 
-
 void set_protocol_5(char *message, char ID_protocol, char status)
 {
     set_protocol_2(message, ID_protocol, status);
@@ -277,7 +273,6 @@ void set_protocol_5(char *message, char ID_protocol, char status)
 
         message[29 + (i * 12)] = (char)(gyro_z[i] >> 8 & 0xFF);
         message[30 + (i * 12)] = (char)(gyro_z[i] & 0xFF);
-        
     }
 
     free(acc_x);
@@ -315,6 +310,7 @@ int get_procotol_length(char ID_protocol)
 
 char *set_message(char ID_protocol, char status)
 {
+    srand(time(NULL));
     char *message = NULL;
     if (ID_protocol == 1)
     {
@@ -342,5 +338,4 @@ char *set_message(char ID_protocol, char status)
         set_protocol_5(message, ID_protocol, status);
     }
     return message;
-
 }
