@@ -189,7 +189,6 @@ class ConfigDialog(QDialog):
                 self.consola_1.setText(
                     f"Conectando...\nIntento {tries}")
                 async with BleakClient(ADDRESS) as client:
-
                     self.client = client
                     await client.is_connected()
                     print("Connected to ESP32", ADDRESS)
@@ -226,21 +225,20 @@ class ConfigDialog(QDialog):
         if self.status == 0 or self.status == 30 or self.status == 31:
             try:
                 if self.client is None:
-                    # client = await self.connect()
-                    async with BleakClient(ADDRESS) as client:
-                    # async with self.client as client:
-                        await client.write_gatt_char(CHARACTERISTICS["status"], bytearray([status]))
-                        await client.write_gatt_char(CHARACTERISTICS["ID_protocol"], bytearray([id_protocol]))
-                        await client.write_gatt_char(CHARACTERISTICS["BMI270_sampling"], bytearray(int(acc_sampling).to_bytes(4)))
-                        await client.write_gatt_char(CHARACTERISTICS["BMI270_acc_sensibility"], bytearray(int(acc_sensibility).to_bytes(4)))
-                        await client.write_gatt_char(CHARACTERISTICS["BMI270_gyro_sensibility"], bytearray(int(gyro_sensibility).to_bytes(4)))
-                        await client.write_gatt_char(CHARACTERISTICS["BME688_sampling"], bytearray(int(bme688_sampling).to_bytes(4)))
-                        await client.write_gatt_char(CHARACTERISTICS["discontinous_time"], bytearray(int(disc_time).to_bytes(4)))
-                        await client.write_gatt_char(CHARACTERISTICS["port_tcp"], bytearray(int(tcp_port).to_bytes(4)))
-                        await client.write_gatt_char(CHARACTERISTICS["port_udp"], bytearray(int(udp_port).to_bytes(4)))
-                        await client.write_gatt_char(CHARACTERISTICS["host_ip_addr"], bytearray(ip_addr, 'utf-8'))
-                        await client.write_gatt_char(CHARACTERISTICS["ssid"], bytearray(ssid, 'utf-8'))
-                        await client.write_gatt_char(CHARACTERISTICS["pass"], bytearray(password, 'utf-8'))
+                    client = await self.connect()
+                async with self.client as client:
+                    await client.write_gatt_char(CHARACTERISTICS["status"], bytearray([status]))
+                    await client.write_gatt_char(CHARACTERISTICS["ID_protocol"], bytearray([id_protocol]))
+                    await client.write_gatt_char(CHARACTERISTICS["BMI270_sampling"], bytearray(int(acc_sampling).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["BMI270_acc_sensibility"], bytearray(int(acc_sensibility).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["BMI270_gyro_sensibility"], bytearray(int(gyro_sensibility).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["BME688_sampling"], bytearray(int(bme688_sampling).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["discontinous_time"], bytearray(int(disc_time).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["port_tcp"], bytearray(int(tcp_port).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["port_udp"], bytearray(int(udp_port).to_bytes(4)))
+                    await client.write_gatt_char(CHARACTERISTICS["host_ip_addr"], bytearray(ip_addr, 'utf-8'))
+                    await client.write_gatt_char(CHARACTERISTICS["ssid"], bytearray(ssid, 'utf-8'))
+                    await client.write_gatt_char(CHARACTERISTICS["pass"], bytearray(password, 'utf-8'))
 
             except Exception as e:
                 print(f"Error: {e}")
